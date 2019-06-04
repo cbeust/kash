@@ -9,22 +9,28 @@ import java.util.*
 
 typealias TokenTransform = (Token.Word, List<String>) -> List<String>
 
+/**
+ * Once a line has been read, all its tokens are passed through a list of
+ * token transformers that can alter its content before it gets analyzed
+ * by the shell.
+ */
 interface TokenTransformer {
     fun transform(token: Token.Word, words: List<String>): List<String>
 }
 
+/**
+ * Expand glob patterns (*, ?, etc...).
+ */
 class GlobTransformer(private val directoryStack: Stack<String>) : TokenTransformer {
     private val log = LoggerFactory.getLogger(GlobTransformer::class.java)
 
-    private val globCharacters = "*?[]".toSet()
+    @Suppress("PrivatePropertyName")
+    private val GLOB_CHARACTERS = "*?[]".toSet()
 
     override fun transform(token: Token.Word, words: List<String>): List<String> {
-        if (words.size == 1 && words[0] == "a.kts") {
-            println("PROBLEM")
-        }
         val result = words.flatMap { word ->
             if (token.isWord && token.surroundedBy == null) {
-                if (word.toSet().intersect(globCharacters).isEmpty()) {
+                if (word.toSet().intersect(GLOB_CHARACTERS).isEmpty()) {
                     listOf(word)
                 } else {
                     val pathMatcher = FileSystems.getDefault().getPathMatcher("glob:$word")
@@ -47,6 +53,9 @@ class GlobTransformer(private val directoryStack: Stack<String>) : TokenTransfor
 
 }
 
+/**
+ * Replace lines surrounded by backticks with their evaluation by the shell.
+ */
 class BackTickTransformer(private val commandRunner: CommandRunner): TokenTransformer {
     override fun transform(token: Token.Word, words: List<String>): List<String> {
         val result = words.flatMap { word ->
@@ -65,7 +74,9 @@ class BackTickTransformer(private val commandRunner: CommandRunner): TokenTransf
     }
 }
 
-
+/**
+ * Replace environment variables with their value.
+ */
 class EnvVariableTransformer(private val env: Map<String, String>): TokenTransformer {
     private val log = LoggerFactory.getLogger(EnvVariableTransformer::class.java)
 
