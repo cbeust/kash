@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://github.com/cbeust/kosh/blob/master/pictures/kash-logo.png?raw=true" width="50%"/>
+<img src="https://github.com/cbeust/kash/blob/master/pictures/kash-logo.png?raw=true" width="50%"/>
 </p>
 
 Kash is a shell written in and powered by Kotlin.
@@ -176,8 +176,8 @@ prompt("`myPrompt()`")
 The prompt now looks like this:
 
 ```
-kotlin/kosh [master]$ git checkout dev
-kotlin/kosh [dev]$ cd ..
+kotlin/kash [master]$ git checkout dev
+kotlin/kash [dev]$ cd ..
 Cedric/kotlin$ 
 ```
 
