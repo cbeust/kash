@@ -15,6 +15,11 @@ typealias TokenTransform = (Token.Word, List<String>) -> List<String>
  * by the shell.
  */
 interface TokenTransformer {
+    /**
+     * Implementers of this function will typically inspect the list of strings
+     * passed, while the token provides additional semantic information, such
+     * as whether that token is surrounded by quotes, etc...
+     */
     fun transform(token: Token.Word, words: List<String>): List<String>
 }
 
