@@ -1,5 +1,7 @@
 [ ] File completion that follows the current directory
 [ ] Background processes with `&`, `bg` `fg`
+[ ] Classpath configuration in `~/.kash.json`
+[ ] Import management
 [ ] Redirect stderr `2>`
 [ ] Aliases
 [ ] Home directory `~`
