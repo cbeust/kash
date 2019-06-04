@@ -183,6 +183,6 @@ Cedric/kotlin$
 
 ### Predef.kts
 
-All the functions supported by Kash are defined in the file `Predef.kts`, which is shipped inside of Kash. You can [browse this file yourself](https://github.com:/cbeust/kash/master/blob/src/main/kotlin/com/beust/kash/Predef.kts) to get an idea of what other functionalities are available.
+All the functions supported by Kash are defined in the file `Predef.kts`, which is shipped inside of Kash. You can [browse this file yourself](https://github.com/cbeust/kash/blob/master/src/main/resources/kts/Predef.kts) to get an idea of what other functionalities are available.
 
 
