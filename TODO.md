@@ -1,3 +1,4 @@
+[ ] File completion that follows the current directory
 [ ] Background processes with `&`, `bg` `fg`
 [ ] Redirect stderr `2>`
 [ ] Aliases
