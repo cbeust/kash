@@ -49,7 +49,10 @@ class Builtins(private val context: BuiltinContext, val engine: ScriptEngine) {
     private fun cd(words: List<String>): Shell.CommandResult {
         val stack = context.directoryStack
         val currentDir = stack.peek()
-        val dir = File(currentDir, words[1])
+        val targetDir = File(words[1])
+        val dir =
+                if (targetDir.isAbsolute) targetDir
+                else File(currentDir, words[1])
         val rc =
             if (words[1] == "-" && ! stack.isEmpty()) {
                 stack.pop()
