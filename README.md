@@ -6,7 +6,7 @@ Kash is a shell written in and powered by Kotlin.
 
 The philosophy of Kash is to provide a minimal layer of compatibility with existing shells and then allow the user to write scripts in Kotlin for anything that requires more logic. This document is split in two parts:
 
-1. [Kash's shell compabitility layer](#kash-as-shell)
+1. [Kash's shell compabitility layer](#kash-as-a-shell)
 2. [Kash and Kotlin](#kash-and-kotlin)
 
 # Running Kash
@@ -20,7 +20,7 @@ $ export JAVA_HOME=... # JDK >= 9
 $ ./run    # Build and run Kash
 
 ```
-# [Kash as a shell](#kash-as-shell)
+# Kash as a shell
 
 Kash supports the following features:
 
@@ -69,7 +69,7 @@ $ ls kash<TAB>
 kash         kash-debug
 ```
 
-# [Kash and Kotlin](#kash-and-kotlin)
+# Kash and Kotlin
 
 ## Kotlin evaluation
 
