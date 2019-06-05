@@ -80,6 +80,25 @@ class BackTickTransformer(private val commandRunner: CommandRunner): TokenTransf
 }
 
 /**
+ * Replace occurrences of ~ with the user home dir.
+ */
+class TildeTransformer: TokenTransformer {
+    override fun transform(token: Token.Word, words: List<String>): List<String> {
+        val homeDir = System.getProperty("user.home")
+        val result =
+            if (token.isWord && token.surroundedBy == null) {
+                words.map {
+                    it.replace("~", homeDir)
+                }
+            } else {
+                words
+            }
+        return result
+    }
+
+}
+
+/**
  * Replace environment variables with their value.
  */
 class EnvVariableTransformer(private val env: Map<String, String>): TokenTransformer {

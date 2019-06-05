@@ -113,7 +113,7 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
 //    }
 
     private val tokenTransformers = listOf(
-            GlobTransformer(directoryStack), BackTickTransformer(this), EnvVariableTransformer(env)
+            TildeTransformer(), GlobTransformer(directoryStack), BackTickTransformer(this), EnvVariableTransformer(env)
     )
 
     private fun tokenTransformer(token: Token.Word, words: List<String>): List<String> {
