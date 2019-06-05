@@ -1,7 +1,6 @@
 package com.beust.kash
 
 import com.beust.kash.Streams.readStream
-import org.jline.builtins.Completers
 import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.impl.completer.StringsCompleter
@@ -49,6 +48,13 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
 
     init {
         //
+        // Read Predef
+        //
+        val predef = InputStreamReader(this::class.java.classLoader.getResource(PREDEF).openStream())
+        engine.eval(predef)
+        log.debug("Read $PREDEF")
+
+        //
         // Read ~/.kash.json, configure the classpath of the script engine
         //
 //        val dotKashReader = DotKashReader()
@@ -59,18 +65,11 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
 //        engine = MyScriptEngineFactory(jars).scriptEngine
         builtins = Builtins(this, engine)
         reader = LineReaderBuilder.builder()
-                .completer(Completers.FileNameCompleter())
                 .completer(StringsCompleter(builtins.commands.keys))
                 .completer(StringsCompleter(KASH_STRINGS))
+                .completer(FileCompleter(directoryStack))
                 .terminal(terminal)
                 .build()
-
-        //
-        // Read Predef
-        //
-        val predef = InputStreamReader(this::class.java.classLoader.getResource(PREDEF).openStream())
-        engine.eval(predef)
-        log.debug("Read $PREDEF")
 
         directoryStack.push(File(".").absoluteFile.canonicalPath)
 

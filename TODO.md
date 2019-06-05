@@ -1,4 +1,3 @@
-- [ ] File completion that follows the current directory
 - [ ] Background processes with `&`, `bg` `fg`
 - [ ] Classpath configuration in `~/.kash.json`
 - [ ] Import management
@@ -8,3 +7,6 @@
 - [ ] Allow Kotlin code in pipes
 - [ ] `||` operator
 - [ ] Return code `$#`
+ 
+ 
+ - [X] File completion that follows the current directory
