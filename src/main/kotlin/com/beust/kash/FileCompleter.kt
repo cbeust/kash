@@ -13,7 +13,7 @@ class FileCompleter(private val directoryStack: Stack<String>) : Completer {
         File(directoryStack.peek()).list().filter {
             it.startsWith(word)
         }.forEach {
-            candidates.add(Candidate(it))
+            candidates.add(Candidate(it + (if (File(it).isDirectory) "/" else "")))
         }
     }
 }
