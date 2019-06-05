@@ -45,13 +45,14 @@ $ echo $PATH
 /usr/bin:...
 ```
 
-> Note: how to set environment variables is covered in the [Kotlin section](#Kash and Kotlin)
+> Note: how to set environment variables is covered in the [Kotlin section](#kash-and-kotlin)
 
 - Changing directories
 
 ```
 $ cd ..
-$ cd - # go back to the previous directory
+$ cd -    # go back to the previous directory
+$ cd ~    # go home
 ```
 
 - Wildcards
@@ -63,13 +64,16 @@ build.gradle.kts
 
 - Tab completion
 
-> Note: Tab completion is still a work in progress and only works for a few built-in and predefined functions at the time of this writing.
+```
+$ ls kash<TAB>
+kash         kash-debug
+```
 
 # [Kash and Kotlin](#kash-and-kotlin)
 
 ## Kotlin evaluation
 
-When a line is entered, Kash parses it and if a shell or built-in command can be found, it will run that. If not, Kash will evaluate the line as a Kotlin expression:
+When a line is entered and Kash determines it's not a shell command, Kash will evaluate the line as a Kotlin expression:
 
 ```
 $ fun h() = "hello"
