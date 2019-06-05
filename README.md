@@ -14,7 +14,7 @@ The philosophy of Kash is to provide a minimal layer of compatibility with exist
 Because Kash is still Alpha, releases are not yet available. In order to run it, you will need a JDK version greater or equal to 9 and to clone the repository:
 
 ```
-$ git clone git@github.com:cbeust/kash
+$ git clone https://github.com/cbeust/kash
 $ cd kash
 $ export JAVA_HOME=... # JDK >= 9
 $ ./run    # Build and run Kash
