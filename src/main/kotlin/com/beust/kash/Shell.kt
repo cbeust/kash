@@ -6,7 +6,9 @@ import org.jline.reader.LineReaderBuilder
 import org.jline.reader.impl.completer.StringsCompleter
 import org.jline.terminal.Terminal
 import org.slf4j.LoggerFactory
-import java.io.*
+import java.io.File
+import java.io.FileReader
+import java.io.InputStreamReader
 import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -376,6 +378,11 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
     private val backgroundProcessesExecutor: ExecutorService = Executors.newFixedThreadPool(10)
     private val backgroundProcesses = hashMapOf<Int, BackgroundCommand>()
 
+    /**
+     * Need to introduce two implementations of this method: one for Windows and one for others.
+     * For Windows, need to 1) look up commands that end with .exe, .cmd, .bat and 2) manually
+     * add support for #! scripts.
+     */
     override fun findCommand(word: String) : Result<String> {
         // See if we can find this command on the path
         paths.forEach { path ->
@@ -385,6 +392,11 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
                     else path + File.separatorChar + word + suffix
                 val file = File(c1)
                 if (file.exists() and file.isFile and file.canExecute()) {
+                    val chars = CharArray(2)
+                    FileReader(File(c1)).read(chars, 0, 2)
+                    if (chars[0] == '#' && chars[1] == '!') {
+                        // shebang script
+                    }
                     return Result(File(c1).absolutePath)
                 }
             }
@@ -398,18 +410,3 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
     }
 }
 
-object Streams {
-    fun readStream(ins: InputStream): String? {
-        val reader = BufferedReader(InputStreamReader(ins))
-
-        val builder = StringBuilder()
-        var line = reader.readLine()
-        while (line != null) {
-            builder.append(line)
-            builder.append(System.getProperty("line.separator"))
-            line = reader.readLine()
-        }
-        val result = builder.toString()
-        return if (result.isBlank()) null else result
-    }
-}
