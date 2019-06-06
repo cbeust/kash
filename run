@@ -1,1 +1,1 @@
-./gradlew shadowJar && java -jar  build/libs/kosh-fat.jar 
+./gradlew shadowJar && java -Dorg.slf4j.simpleLogger.defaultLogLevel=info -jar build/libs/kosh-fat.jar
