@@ -1,10 +1,9 @@
-##TODO 
+## TODO 
 
 - [ ] Background processes with `&`, `bg` `fg`
 - [ ] Support for `#!`
 - [ ] Completion of directories should take into account if the cursor is on a directory, e.g. "ls ~/<tab>"
 - [ ] Classpath configuration in `~/.kash.json`
-- [ ] Figure out why I can't run `./gradlew` on Windows
 - [ ] Grouping commands within parentheses
 - [ ] Redirect stderr `2>`
 - [ ] Aliases
@@ -13,6 +12,7 @@
 - [ ] Return code `$#`
 - [ ] Import management
 - [ ] Exit
+- [ ] Enable / turn off debug logging from the shell
  
 
 ## DONE
