@@ -52,7 +52,7 @@ class GlobTransformer(private val directoryStack: Stack<String>) : TokenTransfor
                 listOf(word)
             }
         }
-        log.debug("'$words' expanded to: $result")
+        log.trace("'$words' expanded to: $result")
         return result
     }
 

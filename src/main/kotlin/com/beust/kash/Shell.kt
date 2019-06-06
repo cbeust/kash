@@ -122,12 +122,12 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
 
     private fun tokenTransformer(token: Token.Word, words: List<String>): List<String> {
         val result = ArrayList(words)
-        log.debug("   Transforming $words")
+        log.trace("    Transforming $words")
         tokenTransformers.forEach { t ->
             val transformed = ArrayList<String>(t.transform(token, result))
             result.clear()
             result.addAll(transformed)
-            log.debug("  After " + t.javaClass + ": " + transformed)
+            log.trace("    After " + t.javaClass + ": " + transformed)
         }
         return result
     }
@@ -259,6 +259,9 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
 
     private fun runCommand(command: Command, inheritIo: Boolean): CommandResult {
         val result: CommandResult = when (command) {
+            is Command.ParenCommand -> {
+                runCommand(command.command, inheritIo)
+            }
             is Command.SingleCommand -> {
                 // A single command
                 launchCommand(command.exec, inheritIo)

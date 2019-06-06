@@ -7,11 +7,11 @@ package com.beust.kash
 class Parser(private val transform: TokenTransform) {
 
     companion object Parser {
-        val wordCharacters = setOf('-', '$', '.', '~', '/', '=', '*', '?', '(', ')', '_')
+        val wordCharacters = setOf('-', '$', '.', '~', '/', '=', '*', '?', '_')
         fun isWord(c: Char) = c.isLetterOrDigit() || wordCharacters.contains(c)
     }
 
-    fun lexicalParse(line: String): List<Token> {
+    fun lexicalParse(line: String, inParen: Boolean = false): List<Token> {
 
         val result = arrayListOf<Token>()
         var currentWord: StringBuilder? = null
@@ -27,7 +27,10 @@ class Parser(private val transform: TokenTransform) {
                 index++
             }
 
-            if (c == '\'' || c == '\"' || c == '`') processQuote(c)
+            if (c == '\'' || c == '\"' || c == '`') {
+                processQuote(c)
+                continue
+            }
 
             if (isWord(c)) {
                 if (currentWord == null) {
@@ -60,6 +63,10 @@ class Parser(private val transform: TokenTransform) {
                     }
                 } else if (c == '<') {
                     result.add(Token.Less())
+                } else if (c == '(') {
+                    result.add(Token.LeftParenthesis())
+                } else if (c == ')') {
+                    result.add(Token.RightParenthesis())
                 }
             }
             index++
@@ -68,9 +75,10 @@ class Parser(private val transform: TokenTransform) {
         return result
     }
 
-    fun parse(line: String): List<Command> {
+    fun parse(line: String): List<Command> = parseTokens(lexicalParse(line))
+
+    private fun parseTokens(tokens: List<Token>): List<Command> {
         val result = arrayListOf<Command>()
-        val tokens = lexicalParse(line)
         var index = 0
         val pipeList = arrayListOf<List<Token>>()
         val andList = arrayListOf<List<Token>>()
@@ -92,9 +100,24 @@ class Parser(private val transform: TokenTransform) {
                 }
             }
 
-            while (index < tokens.size && ! tokens[index].isWord) index++
+            // Skip non words
+            while (index < tokens.size && ! tokens[index].isWord && tokens[index] != Token.LeftParenthesis()) index++
+
+            // Parse words
             while (index < tokens.size && ! tokens[index].isSeparator) {
-                current.add(tokens[index])
+                if (tokens[index] == Token.LeftParenthesis()) {
+                    val right = tokens.indexOfFirst() { it == Token.RightParenthesis() }
+                    if (right == -1) {
+                        throw ShellException("Missing closed parenthesis")
+                    } else {
+                        val subCommands = parseTokens(tokens.subList(index + 1, right))
+                        subCommands.forEach {
+                            result.add(Command.ParenCommand(it))
+                        }
+                    }
+                } else {
+                    current.add(tokens[index])
+                }
                 index++
             }
             if (index < tokens.size) when (tokens[index]) {

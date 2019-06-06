@@ -24,5 +24,6 @@ sealed class Command {
     data class SingleCommand(val exec: Exec) : Command()
     data class AndCommands(val execs: List<Exec>) : Command()
     data class PipeCommands(val execs: List<Exec>): Command()
+    data class ParenCommand(val command: Command): Command()
 }
 

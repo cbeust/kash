@@ -27,5 +27,7 @@ sealed class Token {
     data class GreaterGreater(val c: String = ">>"): Token()
     data class Less(val c: Char = '<'): Token()
     data class SemiColon(val c: Char = ';'): Token()
+    data class LeftParenthesis(val c: Char = '('): Token()
+    data class RightParenthesis(val c: Char = ')'): Token()
 }
 

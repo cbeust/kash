@@ -16,6 +16,7 @@ class ParserTest {
 
     @DataProvider
     fun lexicalDp() = arrayOf(
+        arrayOf("( sleep)", listOf(Token.LeftParenthesis(), word("sleep"), Token.RightParenthesis())),
         arrayOf("./gradlew", listOf(word("./gradlew"))),
         arrayOf("cd ~", listOf(word("cd"), word("~"))),
         arrayOf("ls|wc", listOf(word("ls"), pipe(), word("wc"))),
