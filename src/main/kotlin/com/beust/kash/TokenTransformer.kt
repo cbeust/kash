@@ -92,7 +92,7 @@ class TildeTransformer: TokenTransformer {
                     it.replace("~", homeDir)
                 }
             } else {
-                words
+                words.toList()
             }
         return result
     }
