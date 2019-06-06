@@ -190,3 +190,6 @@ Cedric/kotlin$
 All the functions supported by Kash are defined in the file `Predef.kts`, which is shipped inside of Kash. You can [browse this file yourself](https://github.com/cbeust/kash/blob/master/src/main/resources/kts/Predef.kts) to get an idea of what other functionalities are available.
 
 
+# Community
+
+Join the [Kash Slack channel](https://kotlinlang.slack.com/messages/kash_shell).
