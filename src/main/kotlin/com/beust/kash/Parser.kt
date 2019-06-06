@@ -7,7 +7,7 @@ package com.beust.kash
 class Parser(private val transform: TokenTransform) {
 
     companion object Parser {
-        val wordCharacters = setOf('-', '$', '.', '~', '/', '=', '*', '?', '(', ')')
+        val wordCharacters = setOf('-', '$', '.', '~', '/', '=', '*', '?', '(', ')', '_')
         fun isWord(c: Char) = c.isLetterOrDigit() || wordCharacters.contains(c)
     }
 
