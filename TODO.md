@@ -9,6 +9,7 @@
 - [ ] `||` operator
 - [ ] Return code `$#`
 - [ ] Import management
+- [ ] Exit
  
  
 - [X] File completion that follows the current directory
