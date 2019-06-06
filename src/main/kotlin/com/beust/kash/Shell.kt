@@ -116,16 +116,18 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
 //        return result
 //    }
 
-    private val tokenTransformers = listOf(
+    private val tokenTransformers = listOf<TokenTransformer>(
             TildeTransformer(), GlobTransformer(directoryStack), BackTickTransformer(this), EnvVariableTransformer(env)
     )
 
     private fun tokenTransformer(token: Token.Word, words: List<String>): List<String> {
         val result = ArrayList(words)
+        log.debug("   Transforming $words")
         tokenTransformers.forEach { t ->
-            val transformed = t.transform(token, result)
+            val transformed = ArrayList<String>(t.transform(token, result))
             result.clear()
             result.addAll(transformed)
+            log.debug("  After " + t.javaClass + ": " + transformed)
         }
         return result
     }
