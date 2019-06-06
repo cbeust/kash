@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory
 import java.io.*
 import java.nio.file.Paths
 import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import javax.script.ScriptEngine
 import javax.script.ScriptEngineManager
 
@@ -222,6 +224,8 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
             }
             i++
         }
+        val result2 = result.map { it.replace('/', File.separatorChar) }
+        val command = File(result2[0])
         return result
     }
 
@@ -239,6 +243,7 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
             if (! directoryStack.isEmpty()) {
                 result.directory(File(directoryStack.peek()))
             }
+            // Copy the native shell environment into Kash before launching the process
             val pbEnv = result.environment()
             env.entries.forEach { entry ->
                 pbEnv[entry.key] = entry.value
@@ -345,13 +350,31 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
 
             log.debug("Launching " + pb.command().joinToString(" "))
 
-            val process = pb.start()
-            val returnCode = process.waitFor()
-            val stdout = readStream(process.inputStream)
-            val stderr = readStream(process.errorStream)
-            return CommandResult(returnCode, stdout, stderr)
+            if (newTokens.contains(Token.And())) {
+                val future = backgroundProcessesExecutor.submit<Void> {
+                    val process = pb.start()
+                    onFinish(BackgroundCommandResult(42, process.exitValue()))
+                    null
+                }
+                return CommandResult(0)
+            } else {
+                val process = pb.start()
+                val returnCode = process.waitFor()
+                val stdout = readStream(process.inputStream)
+                val stderr = readStream(process.errorStream)
+                return CommandResult(returnCode, stdout, stderr)
+            }
         }
     }
+
+    fun onFinish(result: BackgroundCommandResult) {
+        println("Background command completed: $result")
+    }
+
+    class BackgroundCommand(val id: Int, val command: String)
+    data class BackgroundCommandResult(val id: Int, val result: Int)
+    private val backgroundProcessesExecutor: ExecutorService = Executors.newFixedThreadPool(10)
+    private val backgroundProcesses = hashMapOf<Int, BackgroundCommand>()
 
     override fun findCommand(word: String) : Result<String> {
         // See if we can find this command on the path
@@ -362,7 +385,7 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
                     else path + File.separatorChar + word + suffix
                 val file = File(c1)
                 if (file.exists() and file.isFile and file.canExecute()) {
-                    return Result(c1)
+                    return Result(File(c1).absolutePath)
                 }
             }
         }
