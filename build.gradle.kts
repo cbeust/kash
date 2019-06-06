@@ -21,17 +21,12 @@ repositories {
     maven { setUrl("https://plugins.gradle.org/m2") }
 }
 
-apply<ApplicationPlugin>()
-
-application {
-    mainClassName = "com.beust.kash.MainKt"
-}
-
 plugins {
     java
     application
     idea
     id("org.jetbrains.kotlin.jvm") version "1.3.31"
+    id("com.github.johnrengelman.shadow") version "4.0.2"
 }
 
 dependencies {
@@ -51,26 +46,18 @@ dependencies {
         .forEach { testCompile(it) }
 }
 
-/////
-// Shadow jar
-//
-
-apply {
-    plugin("com.github.johnrengelman.shadow")
+application {
+    mainClassName = "com.beust.kash.MainKt"
 }
 
 val shadowJar = tasks {
     named<ShadowJar>("shadowJar") {
         archiveBaseName.set("kash-fat")
         mergeServiceFiles()
-        manifest {
-            attributes(mapOf("Main-Class" to "com.beust.kash.MainKt"))
-        }
     }
 }
 
-tasks {
-    build {
-        dependsOn(shadowJar)
-    }
+// Disable standard jar task to avoid building non-shadow jars
+val jar by tasks.getting {
+    enabled = false
 }
