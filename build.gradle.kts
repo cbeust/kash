@@ -61,7 +61,7 @@ apply {
 
 val shadowJar = tasks {
     named<ShadowJar>("shadowJar") {
-        archiveBaseName.set("kosh-fat")
+        archiveBaseName.set("kash-fat")
         mergeServiceFiles()
         manifest {
             attributes(mapOf("Main-Class" to "com.beust.kash.MainKt"))

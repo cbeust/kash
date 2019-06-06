@@ -1,1 +1,1 @@
-java -jar  build/libs/kosh-fat.jar 
+java -jar  build/libs/kash-fat.jar
