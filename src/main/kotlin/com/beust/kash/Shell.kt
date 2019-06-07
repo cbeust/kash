@@ -244,6 +244,10 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
                 redirect = true
                 result.redirectOutput(File(it))
             }
+            exec.error?.let {
+                redirect = true
+                result.redirectError(File(it))
+            }
             if (! directoryStack.isEmpty()) {
                 result.directory(File(directoryStack.peek()))
             }
@@ -348,7 +352,7 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
             // Add this environment only to this process launch, not to the global environment
             //
 
-            val newExec = Exec(newTokens, exec.input, exec.output, exec.transform)
+            val newExec = Exec(newTokens, exec.input, exec.output, exec.error, exec.transform)
             val pb = execToProcessBuilder(newExec, inheritIo)
             commandEnv.entries.forEach {
                 pb.environment()[it.key] = it.value

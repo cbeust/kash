@@ -33,6 +33,15 @@ class Parser(private val transform: TokenTransform) {
             }
 
             if (isWord(c)) {
+                if (c == '2') {
+                    if (index < line.length - 1 && line[index + 1] == '>') {
+                        result.add(Token.TwoGreater())
+                        index += 2
+                        continue
+                    } else {
+                        // do nothing, keep parsing
+                    }
+                }
                 if (currentWord == null) {
                     currentWord = StringBuilder().append(c)
                     result.add(Token.Word(currentWord!!))
@@ -140,9 +149,9 @@ class Parser(private val transform: TokenTransform) {
 
     private fun toExec(tokens: List<Token>): Exec {
         var i = 0
-        val words = arrayListOf<String>()
         var input: String? = null
         var output: String? = null
+        var error: String? = null
         while (i < tokens.size) {
             if (tokens[i] is Token.Less) {
                 if (i + 1 < tokens.size) {
@@ -154,10 +163,15 @@ class Parser(private val transform: TokenTransform) {
                     output = (tokens[i + 1] as Token.Word).name[0]
                     i++
                 }
+            } else if (tokens[i] is Token.TwoGreater) {
+                if (i + 1 < tokens.size) {
+                    error = (tokens[i + 1] as Token.Word).name[0]
+                    i++
+                }
             }
             i++
         }
-        return Exec(tokens, input, output, transform)
+        return Exec(tokens, input, output, error, transform)
     }
 
     private fun buildCommand(tokens: List<Token>) = Command.SingleCommand(toExec(tokens))

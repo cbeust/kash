@@ -1,7 +1,7 @@
 package com.beust.kash
 
 data class Exec(private val passedTokens: List<Token>,
-        val input: String? = null, val output: String? = null,
+        val input: String? = null, val output: String? = null, val error: String?,
         val transform: TokenTransform) {
     val tokens = passedTokens.map {
         val result =

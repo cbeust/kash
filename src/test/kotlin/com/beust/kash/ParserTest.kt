@@ -16,6 +16,8 @@ class ParserTest {
 
     @DataProvider
     fun lexicalDp() = arrayOf(
+        arrayOf("a 2>foo", listOf(word("a"), Token.TwoGreater(), word("foo"))),
+        arrayOf("a2a", listOf(word("a2a"))),
         arrayOf("( sleep)", listOf(Token.LeftParenthesis(), word("sleep"), Token.RightParenthesis())),
         arrayOf("./gradlew", listOf(word("./gradlew"))),
         arrayOf("cd ~", listOf(word("cd"), word("~"))),
@@ -48,7 +50,7 @@ class ParserTest {
         assertThat((result[0] as Token.Word).surroundedBy).isEqualTo(surroundedBy)
     }
 
-    fun exec(words: List<String>, input: String? = null, output: String? = null): Exec {
+    fun exec(words: List<String>, input: String? = null, output: String? = null, error: String? = null): Exec {
         val w: ArrayList<Token>
                 = ArrayList(words.map { Token.Word(StringBuilder(it), null) })
         if (output != null) {
@@ -59,7 +61,7 @@ class ParserTest {
             w.add(Token.Less())
             w.add(Token.Word(StringBuilder(input)))
         }
-        return Exec(w, input, output, idTransformer)
+        return Exec(w, input, output, error, idTransformer)
     }
 
     @DataProvider

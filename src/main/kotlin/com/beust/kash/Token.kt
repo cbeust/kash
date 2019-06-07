@@ -25,6 +25,7 @@ sealed class Token {
     data class AndAnd(val c: String = "&&"): Token()
     data class Greater(val c: Char = '>'): Token()
     data class GreaterGreater(val c: String = ">>"): Token()
+    data class TwoGreater(val c: String = "2>"): Token()
     data class Less(val c: Char = '<'): Token()
     data class SemiColon(val c: Char = ';'): Token()
     data class LeftParenthesis(val c: Char = '('): Token()
