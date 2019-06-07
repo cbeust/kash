@@ -24,7 +24,7 @@ $ ./run    # Build and run Kash
 
 Kash supports the following features:
 
-- Redirections (`stdout`, `stdin`, `stderr):
+- Redirections (`stdout`, `stdin`, `stderr`):
 
 ```
 $ ls > a.txt 2>error.txt
