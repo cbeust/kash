@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://github.com/cbeust/kash/blob/master/pictures/logo-kash.png?raw=true"/>
+<img src="https://github.com/cbeust/kash/blob/master/pictures/logo-kash.png?raw=true" width="50%"/>
 </p>
 
 Kash is a shell written in and powered by Kotlin.
