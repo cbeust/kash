@@ -1,6 +1,7 @@
 package com.beust.kash
 
 import com.beust.kash.Streams.readStream
+import kts.Engine
 import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.impl.completer.StringsCompleter
@@ -13,7 +14,6 @@ import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import javax.script.ScriptEngine
 import javax.script.ScriptEngineManager
 
 
@@ -25,16 +25,13 @@ interface CommandRunner {
 class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
     private val log = LoggerFactory.getLogger(Shell::class.java)
 
-    override val directoryStack: Stack<String> get() = engine.eval("Kash.DIRS") as Stack<String>
-    override val env: HashMap<String, String> get() = engine.eval("Kash.ENV") as HashMap<String, String>
-    override val paths: ArrayList<String> get() = engine.eval("Kash.PATHS") as ArrayList<String>
-    private var prompt: String
-        get() = engine.eval("Kash.PROMPT") as String
-        set(s) { engine.eval("Kash.PROMPT = $s") }
+    override val directoryStack: Stack<String> get() = engine.directoryStack
+    override val env: HashMap<String, String> get() = engine.env
+    override val paths: ArrayList<String> get() = engine.paths
+
     private val reader: LineReader
     private val builtins: Builtins
-    private val engine: ScriptEngine = ScriptEngineManager().getEngineByExtension("kts")
-
+    private val engine: Engine
     private val DOT_KASH = File(System.getProperty("user.home"), ".kash.kts")
     private val PREDEF = "kts/Predef.kts"
     private val KASH_STRINGS = listOf("Kash.ENV", "Kash.PATHS", "Kash.PROMPT", "Kash.DIRS")
@@ -51,12 +48,15 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
 //    }
 
     init {
+        val kotlinEngine = ScriptEngineManager().getEngineByExtension("kts")
         //
         // Read Predef
         //
         val predef = InputStreamReader(this::class.java.classLoader.getResource(PREDEF).openStream())
-        engine.eval(predef)
+        kotlinEngine.eval(predef)
         log.debug("Read $PREDEF")
+
+        engine = Engine(kotlinEngine)
 
         //
         // Read ~/.kash.json, configure the classpath of the script engine
@@ -142,7 +142,7 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
     }
 
     private fun prompt(): String {
-        val p = prompt
+        val p = engine.prompt
         return if (p.isBlank()) {
             defaultPrompt()
         } else {
@@ -268,7 +268,13 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
             }
             is Command.SingleCommand -> {
                 // A single command
-                launchCommand(command.exec, inheritIo)
+                if (command.exec.tokens.contains(Token.And())) {
+                    launchBackgroundCommand {
+                        launchCommand(command.exec, true)
+                    }
+                } else {
+                    launchCommand(command.exec, inheritIo)
+                }
             }
             is Command.PipeCommands -> {
                 // Commands piped between each other
@@ -308,6 +314,15 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
     }
 
     class CommandResult(val returnCode: Int, val stdout: String? = null, val stderr: String? = null)
+
+    private fun launchBackgroundCommand(f: () -> CommandResult): CommandResult {
+        val future = backgroundProcessesExecutor.submit<Void> {
+            val commandResult = f()
+            onFinish(BackgroundCommandResult(42, commandResult.returnCode))
+            null
+        }
+        return CommandResult(0)
+    }
 
     private fun launchCommand(exec: Exec, inheritIo: Boolean): CommandResult {
         //
@@ -361,20 +376,11 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
 
             log.debug("Launching " + pb.command().joinToString(" "))
 
-            if (newTokens.contains(Token.And())) {
-                val future = backgroundProcessesExecutor.submit<Void> {
-                    val process = pb.start()
-                    onFinish(BackgroundCommandResult(42, process.exitValue()))
-                    null
-                }
-                return CommandResult(0)
-            } else {
-                val process = pb.start()
-                val returnCode = process.waitFor()
-                val stdout = readStream(process.inputStream)
-                val stderr = readStream(process.errorStream)
-                return CommandResult(returnCode, stdout, stderr)
-            }
+            val process = pb.start()
+            val returnCode = process.waitFor()
+            val stdout = readStream(process.inputStream)
+            val stderr = readStream(process.errorStream)
+            return CommandResult(returnCode, stdout, stderr)
         }
     }
 
