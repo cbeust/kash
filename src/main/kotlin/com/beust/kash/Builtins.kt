@@ -1,20 +1,20 @@
 package com.beust.kash
 
+import kts.Engine
 import java.io.File
 import java.io.FileReader
 import java.util.*
-import javax.script.ScriptEngine
 import kotlin.reflect.KFunction1
 
 interface BuiltinContext {
     val env: Map<String, String>
-    val paths: List<String>
+    val paths: ArrayList<String>
     val directoryStack: Stack<String>
 
     fun findCommand(word: String) : Result<String>
 }
 
-class Builtins(private val context: BuiltinContext, val engine: ScriptEngine) {
+class Builtins(private val context: BuiltinContext, val engine: Engine) {
     val commands: HashMap<String, KFunction1<List<String>, Shell.CommandResult>> = hashMapOf(
             "cd" to ::cd,
             "pwd" to ::pwd,
@@ -24,7 +24,7 @@ class Builtins(private val context: BuiltinContext, val engine: ScriptEngine) {
     )
 
     private fun env(words: List<String>): Shell.CommandResult {
-        val r = engine.eval("Kash.ENV") as Map<String, String>
+        val r = engine.env
         return Shell.CommandResult(0, r.toString(), null)
     }
 

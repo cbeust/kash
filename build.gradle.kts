@@ -36,11 +36,13 @@ dependencies {
             "org.jline:jline:3.11.0",
             "org.fusesource:fuse-project:7.2.0.redhat-060",
             "org.slf4j:slf4j-api:1.8.0-beta4",
-            "org.slf4j:slf4j-simple:1.8.0-beta4",
-            "com.beust:klaxon:5.0.5"
+            "org.slf4j:slf4j-simple:1.8.0-beta4"
             )
         .forEach { compile(it) }
 
+    compile("com.beust:klaxon:5.0.5") {
+        exclude("org.jetbrains.kotlin")
+    }
     listOf("org.testng:testng:6.13.1",
             "org.assertj:assertj-core:3.5.2")
         .forEach { testCompile(it) }
