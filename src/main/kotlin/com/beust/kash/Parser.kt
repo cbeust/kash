@@ -120,7 +120,7 @@ class Parser(private val transform: TokenTransform) {
                     if (right == -1) {
                         throw ShellException("Missing closed parenthesis")
                     } else {
-                        val parenContent = tokens.subList(index, right - 1)
+                        val parenContent = tokens.subList(index + 1, right)
                         if (parenContent.isNotEmpty()) {
                             val subCommands = parseTokens(parenContent)
                             subCommands.forEach {
