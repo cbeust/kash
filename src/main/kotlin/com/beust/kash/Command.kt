@@ -7,15 +7,15 @@ sealed class Command {
             is SingleCommand -> this.exec.tokens
             is AndCommands -> this.execs[0].tokens
             is PipeCommands -> this.execs[0].tokens
-            else -> emptyList()
+            is ParenCommand -> this.command.tokens
         }
 
     val words: List<String>
         get() = when(this) {
-                is SingleCommand -> this.exec.words
-                is AndCommands -> this.execs[0].words
-                is PipeCommands -> this.execs[0].words
-                else -> listOf("")
+            is SingleCommand -> this.exec.words
+            is AndCommands -> this.execs[0].words
+            is PipeCommands -> this.execs[0].words
+            is ParenCommand -> this.command.words
         }
 
     val firstWord: String
