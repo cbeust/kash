@@ -36,7 +36,7 @@ dependencies {
             "org.jline:jline:3.11.0",
             "org.fusesource:fuse-project:7.2.0.redhat-060",
             "org.slf4j:slf4j-api:1.8.0-beta4",
-            "org.slf4j:slf4j-simple:1.8.0-beta4"
+            "ch.qos.logback:logback-classic:1.3.0-alpha4"
             )
         .forEach { compile(it) }
 
