@@ -183,7 +183,8 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
 
         commands.forEach { command ->
             val firstWord = command.firstWord
-            val pathCommand = findCommand(firstWord).result
+            val secondWord = if (command.tokens.size > 1) command.tokens[1] else null
+            val pathCommand = if (secondWord != Token.LeftParenthesis()) findCommand(firstWord).result else null
             val builtinCommand = builtins.commands[firstWord]
             fun logCommand(type: String)
                     = log.debug("Type($type), Exec:$command")

@@ -115,13 +115,17 @@ class Parser(private val transform: TokenTransform) {
             // Parse words
             while (index < tokens.size && ! tokens[index].isSeparator) {
                 if (tokens[index] == Token.LeftParenthesis()) {
+                    current.add(tokens[index])
                     val right = tokens.indexOfFirst() { it == Token.RightParenthesis() }
                     if (right == -1) {
                         throw ShellException("Missing closed parenthesis")
                     } else {
-                        val subCommands = parseTokens(tokens.subList(index + 1, right))
-                        subCommands.forEach {
-                            result.add(Command.ParenCommand(it))
+                        val parenContent = tokens.subList(index, right - 1)
+                        if (parenContent.isNotEmpty()) {
+                            val subCommands = parseTokens(parenContent)
+                            subCommands.forEach {
+                                result.add(Command.ParenCommand(it))
+                            }
                         }
                     }
                 } else {

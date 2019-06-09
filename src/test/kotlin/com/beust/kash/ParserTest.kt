@@ -16,6 +16,7 @@ class ParserTest {
 
     @DataProvider
     fun lexicalDp() = arrayOf(
+        arrayOf("test()", listOf(word("test"), Token.LeftParenthesis(), Token.RightParenthesis())),
         arrayOf("a 2>foo", listOf(word("a"), Token.TwoGreater(), word("foo"))),
         arrayOf("a2a", listOf(word("a2a"))),
         arrayOf("( sleep)", listOf(Token.LeftParenthesis(), word("sleep"), Token.RightParenthesis())),
