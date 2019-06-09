@@ -1,10 +1,14 @@
 package com.beust.kash
 
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
 import kts.Engine
 import java.io.File
 import java.io.FileReader
 import java.util.*
 import kotlin.reflect.KFunction1
+
+
 
 interface BuiltinContext {
     val env: Map<String, String>
@@ -20,8 +24,16 @@ class Builtins(private val context: BuiltinContext, val engine: Engine) {
             "pwd" to ::pwd,
             "." to ::dot,
             "env" to ::env,
-            "which" to ::which
+            "which" to ::which,
+            "log" to ::log
     )
+
+    private fun log(words: List<String>): Shell.CommandResult {
+        val root = org.slf4j.LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
+        if (root.level == Level.DEBUG) root.level = Level.OFF
+            else root.level = Level.DEBUG
+        return Shell.CommandResult(0)
+    }
 
     private fun env(words: List<String>): Shell.CommandResult {
         val r = engine.env

@@ -1,1 +1,2 @@
-java -jar  build/libs/kash-fat.jar
+java -Droot-level=DEBUG -jar build/libs/kash-fat.jar
+
