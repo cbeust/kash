@@ -411,7 +411,7 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
                     val chars = CharArray(2)
                     FileReader(File(c1)).read(chars, 0, 2)
                     if (chars[0] == '#' && chars[1] == '!') {
-                        // shebang script
+                        // TOOD on Windows: shebang script
                     }
                     return Result(File(c1).absolutePath)
                 }
