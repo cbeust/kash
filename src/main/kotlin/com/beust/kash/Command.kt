@@ -21,9 +21,12 @@ sealed class Command(open val background: Boolean) {
     val firstWord: String
         get() = words[0]
 
-    data class SingleCommand(val exec: Exec, override val background: Boolean) : Command(background)
-    data class AndCommands(val execs: List<Exec>, override val background: Boolean) : Command(background)
-    data class PipeCommands(val execs: List<Exec>, override val background: Boolean): Command(background)
+    data class SingleCommand(val exec: Exec, override val background: Boolean = false)
+        : Command(background)
+    data class AndCommands(val execs: List<Exec>, override val background: Boolean = false)
+        : Command(background)
+    data class PipeCommands(val execs: List<Exec>, override val background: Boolean = false)
+        : Command(background)
     data class ParenCommand(val command: Command, override val background: Boolean): Command(background)
 }
 
