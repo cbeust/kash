@@ -86,11 +86,12 @@ class Parser(private val transform: TokenTransform) {
 
     fun parse(line: String): List<Command> = parseTokens(lexicalParse(line))
 
-    private fun parseTokens(tokens: List<Token>): List<Command> {
+    private fun parseTokens(tokens: List<Token>,
+            pipeList: ArrayList<List<Token>> = arrayListOf<List<Token>>(),
+            andList: ArrayList<List<Token>> = arrayListOf<List<Token>>()
+    ): List<Command> {
         val result = arrayListOf<Command>()
         var index = 0
-        val pipeList = arrayListOf<List<Token>>()
-        val andList = arrayListOf<List<Token>>()
 
         while (index < tokens.size) {
             val current = arrayListOf<Token>()
@@ -105,7 +106,9 @@ class Parser(private val transform: TokenTransform) {
                     result.add(buildAndList(andList))
                     andList.clear()
                 } else {
-                    result.add(buildCommand(current))
+                    if (current.isNotEmpty()) {
+                        result.add(buildCommand(current))
+                    }
                 }
             }
 
@@ -115,16 +118,23 @@ class Parser(private val transform: TokenTransform) {
             // Parse words
             while (index < tokens.size && ! tokens[index].isSeparator) {
                 if (tokens[index] == Token.LeftParenthesis()) {
-                    current.add(tokens[index])
                     val right = tokens.indexOfFirst() { it == Token.RightParenthesis() }
                     if (right == -1) {
                         throw ShellException("Missing closed parenthesis")
                     } else {
                         val parenContent = tokens.subList(index + 1, right)
                         if (parenContent.isNotEmpty()) {
-                            val subCommands = parseTokens(parenContent)
+                            val subCommands = parseTokens(parenContent, pipeList, andList)
                             subCommands.forEach {
-                                result.add(Command.ParenCommand(it))
+                                index += it.tokens.size + 2
+                                val background =
+                                    if (index < tokens.size - 1 && tokens[index + 1] == Token.And()) {
+                                        index++
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                result.add(Command.ParenCommand(it, background))
                             }
                         }
                     }
@@ -147,9 +157,13 @@ class Parser(private val transform: TokenTransform) {
         return result
     }
 
-    private fun buildAndList(andList: List<List<Token>>) = Command.AndCommands(andList.map { toExec(it) })
+    private fun buildAndList(andList: List<List<Token>>): Command.AndCommands {
+        val background = false
+        return Command.AndCommands(andList.map { toExec(it) }, background)
+    }
 
-    private fun buildPipeList(pipeList: List<List<Token>>) = Command.PipeCommands(pipeList.map { toExec(it) })
+    private fun buildPipeList(pipeList: List<List<Token>>)
+            = Command.PipeCommands(pipeList.map { toExec(it) }, false)
 
     private fun toExec(tokens: List<Token>): Exec {
         var i = 0
@@ -178,5 +192,8 @@ class Parser(private val transform: TokenTransform) {
         return Exec(tokens, input, output, error, transform)
     }
 
-    private fun buildCommand(tokens: List<Token>) = Command.SingleCommand(toExec(tokens))
+    private fun buildCommand(tokens: List<Token>): Command.SingleCommand {
+        val background = tokens[tokens.size - 1] == Token.And()
+        return Command.SingleCommand(toExec(tokens), background)
+    }
 }

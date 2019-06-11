@@ -265,11 +265,17 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
     private fun runCommand(command: Command, inheritIo: Boolean): CommandResult {
         val result: CommandResult = when (command) {
             is Command.ParenCommand -> {
-                runCommand(command.command, inheritIo)
+                if (command.background) {
+                    launchBackgroundCommand {
+                        runCommand(command.command, inheritIo)
+                    }
+                } else {
+                    runCommand(command.command, inheritIo)
+                }
             }
             is Command.SingleCommand -> {
                 // A single command
-                if (command.exec.tokens.contains(Token.And())) {
+                if (command.background) {
                     launchBackgroundCommand {
                         launchCommand(command.exec, true)
                     }
