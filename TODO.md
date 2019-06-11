@@ -1,20 +1,24 @@
 ## TODO 
 
-- [ ] Background processes with `&`, `bg` `fg`
-- [ ] Support for `#!`
+- [ ] Background processes:
+    - [X] `&`
+    - [ ] `bg`
+    - [ ] `fg`
+    - [ ] `ps`
+- [ ] Support for `#!` (Windows)
 - [ ] Classpath configuration in `~/.kash.json`
-- [ ] Grouping commands within parentheses
 - [ ] Aliases
 - [ ] Allow Kotlin code in pipes
 - [ ] `||` operator
 - [ ] Return code `$#`
 - [ ] Import management
 - [ ] Exit
-- [ ] Enable / turn off debug logging from the shell
  
 
 ## DONE
 
+- [X] Grouping commands within parentheses
+- [X] Enable / turn off debug logging from the shell
 - [X] Completion of directories should take into account if the cursor is on a directory, e.g. "ls ~/<tab>"
 - [X] Redirect stderr `2>`
 - [X] File completion that follows the current directory
