@@ -2,6 +2,11 @@ package com.beust.kash
 
 import com.beust.kash.Streams.readStream
 import kts.Engine
+import org.jetbrains.kotlin.cli.common.repl.KotlinJsr223JvmScriptEngineFactoryBase
+import org.jetbrains.kotlin.cli.common.repl.ScriptArgsWithTypes
+import org.jetbrains.kotlin.script.jsr223.KotlinJsr223JvmLocalScriptEngine
+import org.jetbrains.kotlin.script.jsr223.KotlinStandardJsr223ScriptTemplate
+import org.jetbrains.kotlin.script.util.scriptCompilationClasspathFromContextOrStlib
 import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.impl.completer.StringsCompleter
@@ -14,7 +19,9 @@ import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import javax.script.ScriptEngineManager
+import javax.script.Bindings
+import javax.script.ScriptContext
+import javax.script.ScriptEngine
 
 
 interface CommandRunner {
@@ -36,19 +43,32 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
     private val PREDEF = "kts/Predef.kts"
     private val KASH_STRINGS = listOf("Kash.ENV", "Kash.PATHS", "Kash.PROMPT", "Kash.DIRS")
 
-//    class MyScriptEngineFactory(private val classpath: List<File>) : KotlinJsr223JvmScriptEngineFactoryBase() {
-//        override fun getScriptEngine(): ScriptEngine =
-//                KotlinJsr223JvmLocalScriptEngine(
-//                        this,
-//                        classpath, // !!! supply the script classpath here
-//                        KotlinStandardJsr223ScriptTemplate::class.qualifiedName!!,
-//                        { ctx, types -> ScriptArgsWithTypes(arrayOf(ctx.getBindings(ScriptContext.ENGINE_SCOPE)), types ?: emptyArray()) },
-//                        arrayOf(Bindings::class)
-//                )
-//    }
+    class MyScriptEngineFactory(private val classpath: List<File>) : KotlinJsr223JvmScriptEngineFactoryBase() {
+        override fun getScriptEngine(): ScriptEngine =
+                KotlinJsr223JvmLocalScriptEngine(
+                        this,
+                        classpath, // !!! supply the script classpath here
+                        KotlinStandardJsr223ScriptTemplate::class.qualifiedName!!,
+                        { ctx, types -> ScriptArgsWithTypes(arrayOf(ctx.getBindings(ScriptContext.ENGINE_SCOPE)), types ?: emptyArray()) },
+                        arrayOf(Bindings::class)
+                )
+    }
 
     init {
-        val kotlinEngine = ScriptEngineManager().getEngineByExtension("kts")
+        //
+        // Read ~/.kash.json, configure the classpath of the script engine
+        //
+        val dotKashReader = DotKashReader()
+        val userClasspath = dotKashReader.dotKash?.classpath?.map { File(it) } ?: emptyList()
+
+        val cp =
+                scriptCompilationClasspathFromContextOrStlib("kotlin-script-util.jar",
+                        wholeClasspath = true) +
+            userClasspath
+
+//        val kotlinEngine = ScriptEngineManager().getEngineByExtension("kts")
+        val kotlinEngine = MyScriptEngineFactory(cp).scriptEngine
+
         //
         // Read Predef
         //
@@ -58,15 +78,6 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
 
         engine = Engine(kotlinEngine)
 
-        //
-        // Read ~/.kash.json, configure the classpath of the script engine
-        //
-//        val dotKashReader = DotKashReader()
-//        val su = kotlinJar("kotlin-script-util")
-//        val classpath = dotKashReader.dotKash?.classpath?.map { File(it) } ?: emptyList()
-//        val jars = listOf<File>()//KotlinJars.compilerClasspath + classpath
-
-//        engine = MyScriptEngineFactory(jars).scriptEngine
         builtins = Builtins(this, engine)
         reader = LineReaderBuilder.builder()
                 .completer(StringsCompleter(builtins.commands.keys))
