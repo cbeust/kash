@@ -9,7 +9,7 @@ import javax.script.ScriptEngineManager
 
 @Test
 class ScriptTest {
-    private val kotlinEngine = ScriptEngineManager().getEngineByExtension("kts")
+    private val kotlinEngine = ScriptEngineManager().getEngineByExtension("kash.kts")
 
     fun dependsOn() {
         val result = kotlinEngine.evalScript("""

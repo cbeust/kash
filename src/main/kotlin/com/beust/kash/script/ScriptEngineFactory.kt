@@ -23,6 +23,8 @@ class ScriptEngineFactory : KotlinJsr223JvmScriptEngineFactoryBase() {
     private val compilationConfiguration = createJvmCompilationConfigurationFromTemplate<ScriptDefinition>()
     private val evaluationConfiguration = createJvmEvaluationConfigurationFromTemplate<ScriptDefinition>()
 
+    override fun getExtensions(): List<String> = listOf("kash.kts")
+
     @Synchronized
     protected fun JvmScriptCompilationConfigurationBuilder.calculateClasspath() {
         //

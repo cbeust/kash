@@ -23,7 +23,11 @@ import kotlin.script.experimental.jvm.updateClasspath
 import kotlin.script.templates.standard.ScriptTemplateWithBindings
 
 @Suppress("unused")
-@KotlinScript(compilationConfiguration = CompilationConfiguration::class)
+@KotlinScript(
+    displayName = "kash script",
+    fileExtension = "kash.kts",
+    compilationConfiguration = CompilationConfiguration::class
+)
 abstract class ScriptDefinition(val jsr223Bindings: Bindings) : ScriptTemplateWithBindings(jsr223Bindings) {
 
     private val myEngine: ScriptEngine? get() = bindings[KOTLIN_SCRIPT_ENGINE_BINDINGS_KEY]?.let { it as? ScriptEngine }

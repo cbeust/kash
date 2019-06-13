@@ -37,7 +37,7 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
     private val KASH_STRINGS = listOf("Kash.ENV", "Kash.PATHS", "Kash.PROMPT", "Kash.DIRS")
 
     init {
-        val kotlinEngine = ScriptEngineManager().getEngineByExtension("kts")
+        val kotlinEngine = ScriptEngineManager().getEngineByExtension("kash.kts")
 
         //
         // Read Predef
