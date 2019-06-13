@@ -33,16 +33,18 @@ plugins {
 val kotlinVer by extra { "1.3.40-eap-105" }
 
 dependencies {
-    listOf("org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlinVer",
-            "org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:$kotlinVer",
-            "org.jetbrains.kotlin:kotlin-script-util:$kotlinVer",
-            "org.jline:jline:3.11.0",
+    listOf("org.jline:jline:3.11.0",
             "org.fusesource:fuse-project:7.2.0.redhat-060",
             "org.slf4j:slf4j-api:1.8.0-beta4",
             "ch.qos.logback:logback-classic:1.3.0-alpha4"
             )
         .forEach { compile(it) }
 
+    compile(kotlin("compiler-embeddable", kotlinVer))
+    compile(kotlin("scripting-compiler-embeddable", kotlinVer))
+    compile(kotlin("scripting-common", kotlinVer))
+    compile(kotlin("scripting-jvm", kotlinVer))
+    compile(kotlin("scripting-jvm-host-embeddable", kotlinVer))
     compile("com.beust:klaxon:5.0.5") {
         exclude("org.jetbrains.kotlin")
     }
