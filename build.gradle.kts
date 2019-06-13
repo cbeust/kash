@@ -45,6 +45,8 @@ dependencies {
     compile(kotlin("scripting-common", kotlinVer))
     compile(kotlin("scripting-jvm", kotlinVer))
     compile(kotlin("scripting-jvm-host-embeddable", kotlinVer))
+    compile(kotlin("main-kts", kotlinVer))
+    compile("org.apache.ivy:ivy:2.4.0")
     compile("com.beust:klaxon:5.0.5") {
         exclude("org.jetbrains.kotlin")
     }
