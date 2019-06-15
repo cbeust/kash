@@ -1,12 +1,24 @@
-package kts
+package com.beust.kash
 
 import java.io.InputStreamReader
 import java.util.*
+import javax.script.ScriptContext
 import javax.script.ScriptEngine
 
 class Engine(private val engine: ScriptEngine) {
-    fun eval(script: InputStreamReader) = engine.eval(script)
-    fun eval(script: String) = engine.eval(script)
+    companion object Engine {
+        const val ARGS = "args"
+    }
+
+    fun eval(script: InputStreamReader, args: List<String> = emptyList()): Any? {
+        // Temporary hack that should be removed when 1.3.50 comes out
+        engine.getBindings(ScriptContext.ENGINE_SCOPE)[ARGS] = args
+        return engine.eval(script)
+    }
+
+    fun eval(script: String): Any? {
+        return engine.eval(script)
+    }
 
     val directoryStack: Stack<String>
         get() = synchronized(engine) {

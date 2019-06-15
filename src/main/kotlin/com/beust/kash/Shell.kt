@@ -1,7 +1,6 @@
 package com.beust.kash
 
 import com.beust.kash.Streams.readStream
-import kts.Engine
 import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.impl.completer.StringsCompleter

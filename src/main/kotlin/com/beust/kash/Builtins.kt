@@ -52,8 +52,8 @@ class Builtins(private val context: BuiltinContext, val engine: Engine) {
     }
 
     private fun dot(words: List<String>): Shell.CommandResult {
-        val r = engine.eval(FileReader(File(words[1])))
-        println("Running script")
+        println("Running script " + words[1])
+        val r = engine.eval(FileReader(File(words[1])), words.subList(2, words.size))
 
         return Shell.CommandResult(0)
     }

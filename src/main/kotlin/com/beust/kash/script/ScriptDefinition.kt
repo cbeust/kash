@@ -5,6 +5,7 @@
 
 package com.beust.kash.script
 
+import com.beust.kash.Engine
 import org.jetbrains.kotlin.cli.common.repl.KOTLIN_SCRIPT_ENGINE_BINDINGS_KEY
 import org.jetbrains.kotlin.cli.common.repl.KOTLIN_SCRIPT_STATE_BINDINGS_KEY
 import org.jetbrains.kotlin.mainKts.impl.FilesAndIvyResolver
@@ -60,6 +61,9 @@ abstract class ScriptDefinition(val jsr223Bindings: Bindings) : ScriptTemplateWi
         }
 
     fun createBindings(): Bindings = withMyEngine { it.createBindings() }
+
+    // Temporary hack that should be removed when 1.3.50 comes out
+     val args: List<String> get() = bindings[Engine.ARGS] as List<String>
 }
 
 object CompilationConfiguration : ScriptCompilationConfiguration(
