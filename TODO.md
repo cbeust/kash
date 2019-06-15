@@ -5,6 +5,7 @@
     - [ ] `bg`
     - [ ] `fg`
     - [ ] `ps`
+- [ ] Allow shell output to be processed in Kotlin, e.g. `os("ls -l").filter { it.contains("foo") }`
 - [ ] Support for `#!` (Windows)
 - [ ] Classpath configuration in `~/.kash.json`
 - [ ] Aliases
