@@ -1,3 +1,4 @@
+
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 buildscript {
@@ -36,20 +37,18 @@ dependencies {
     listOf("org.jline:jline:3.11.0",
             "org.fusesource:fuse-project:7.2.0.redhat-060",
             "org.slf4j:slf4j-api:1.8.0-beta4",
-            "ch.qos.logback:logback-classic:1.3.0-alpha4"
-            )
+            "ch.qos.logback:logback-classic:1.3.0-alpha4",
+            "org.apache.ivy:ivy:2.4.0")
         .forEach { compile(it) }
 
-    compile(kotlin("compiler-embeddable", kotlinVer))
-    compile(kotlin("scripting-compiler-embeddable", kotlinVer))
-    compile(kotlin("scripting-common", kotlinVer))
-    compile(kotlin("scripting-jvm", kotlinVer))
-    compile(kotlin("scripting-jvm-host-embeddable", kotlinVer))
-    compile(kotlin("main-kts", kotlinVer))
-    compile("org.apache.ivy:ivy:2.4.0")
     compile("com.beust:klaxon:5.0.5") {
         exclude("org.jetbrains.kotlin")
     }
+
+    listOf("compiler-embeddable", "scripting-compiler-embeddable", "scripting-common", "scripting-jvm",
+                "scripting-jvm-host-embeddable", "main-kts")
+        .forEach { compile(kotlin(it, kotlinVer)) }
+
     listOf("org.testng:testng:6.13.1",
             "org.assertj:assertj-core:3.5.2")
         .forEach { testCompile(it) }
