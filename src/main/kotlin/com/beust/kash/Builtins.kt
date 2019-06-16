@@ -14,7 +14,7 @@ interface BuiltinContext {
     val paths: ArrayList<String>
     val directoryStack: Stack<String>
 
-    fun findCommand(word: String) : Result<String>
+    fun findCommand(word: String): Shell.CommandSearchResult?
 }
 
 class Builtins(private val context: BuiltinContext, val engine: Engine) {
@@ -41,12 +41,12 @@ class Builtins(private val context: BuiltinContext, val engine: Engine) {
 
     private fun which(words: List<String>): Shell.CommandResult {
         val commandResult = context.findCommand(words[1])
-        val command = commandResult.result
+        val command = commandResult?.path
 
         if (command != null) {
             return Shell.CommandResult(0, command)
         } else {
-            return Shell.CommandResult(1, commandResult.errorMessage)
+            return Shell.CommandResult(1)
         }
     }
 

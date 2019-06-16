@@ -31,13 +31,14 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
     private val reader: LineReader
     private val builtins: Builtins
     private val engine: Engine
-    private val DOT_KASH = File(System.getProperty("user.home"), ".kash.kts")
+    private val DOT_KASH = File(System.getProperty("user.home"), ".kash.json")
     private val PREDEF = "kts/Predef.kts"
     private val KASH_STRINGS = listOf("Kash.ENV", "Kash.PATHS", "Kash.PROMPT", "Kash.DIRS")
+    private val scriptPath = arrayListOf<String>()
 
     init {
         val kotlinEngine = ScriptEngineManager().getEngineByExtension("kash.kts")
-
+                ?: throw IllegalArgumentException("Couldn't find a script engine for .kash.kts")
         //
         // Read Predef
         //
@@ -47,6 +48,9 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
 
         engine = Engine(kotlinEngine)
 
+        //
+        // Configure the line reader with the tab completers
+        //
         builtins = Builtins(this, engine)
         reader = LineReaderBuilder.builder()
                 .completer(StringsCompleter(builtins.commands.keys))
@@ -70,6 +74,12 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
         }
 
         //
+        // Read ~/.kash.json
+        //
+        DotKashReader.dotKash?.scriptPath?.let {
+            scriptPath.addAll(it)
+        }
+
         // Copy the path
         //
         System.getenv("PATH").split(File.pathSeparator).forEach {
@@ -163,26 +173,31 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
 
         commands.forEach { command ->
             val firstWord = command.firstWord
-            val secondWord = if (command.tokens.size > 1) command.tokens[1] else null
-            val pathCommand = if (secondWord != Token.LeftParenthesis()) findCommand(firstWord).result else null
-            val builtinCommand = builtins.commands[firstWord]
+            val commandSearchResult = findCommand(firstWord)
+
             fun logCommand(type: String)
                     = log.debug("Type($type), Exec:$command")
             result =
-                if (builtinCommand != null) {
+                if (commandSearchResult?.type == CommandType.BUILT_IN) {
                     // Built-in command
                     logCommand("Built-in")
-                    builtinCommand(command.words)
-                } else if (pathCommand != null) {
+                    builtins.commands[firstWord]!!(command.words)
+//                    builtinCommand(command.words)
+                } else if (commandSearchResult?.type == CommandType.COMMAND) {
                     // Shell command
                     logCommand("Command")
                     runCommand(command, inheritIo)
+                } else if (commandSearchResult?.type == CommandType.SCRIPT) {
+                    logCommand("Script")
+                    val result = engine.eval(FileReader(File(commandSearchResult.path)),
+                            command.words.subList(1, command.words.size))
+                    CommandResult(0, result?.toString() ?: null)
                 } else {
                     // Kotlin
                     logCommand("Kotlin")
                     try {
-                        val res = engine.eval(line)
-                        CommandResult(0, res?.toString(), null)
+                        val result = engine.eval(line)
+                        CommandResult(0, result?.toString(), null)
                     } catch(ex: Exception) {
                         CommandResult(1, null, ex.message)
                     }
@@ -194,7 +209,7 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
 
     private fun findPath(words: List<Token>): List<String>? {
         val commandResult = findCommand((words[0] as Token.Word).name[0])
-        val pathCommand = commandResult.result
+        val pathCommand = commandResult?.path
         val result = arrayListOf<String>().apply { add(pathCommand!!) }
         var i = 1
         while (i < words.size) {
@@ -284,7 +299,7 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
                 while (i < command.execs.size && lastReturnCode == 0) {
                     val exec = command.execs[i]
                     log.debug("Launching $exec")
-                    val path = findCommand(exec.words[0]).result
+                    val path = findCommand(exec.words[0])?.path
                     if (path != null) {
                         result = launchCommand(exec, inheritIo)
                         if (i < command.execs.size - 1) println(result.stdout)
@@ -380,12 +395,46 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
     private val backgroundProcessesExecutor: ExecutorService = Executors.newFixedThreadPool(10)
     private val backgroundProcesses = hashMapOf<Int, BackgroundCommand>()
 
+    enum class CommandType { COMMAND, SCRIPT, BUILT_IN, OTHER }
+
+    /**
+     * Describe the result of search for a command. A command can be an executable, a script, or a built-in command.
+     */
+    class CommandSearchResult(val type: CommandType, val path: String)
+
+    override fun findCommand(word: String): CommandSearchResult? {
+        return findBuiltin(word) ?: findScript(word) ?: findExecutable(word)
+    }
+
+    private fun findBuiltin(word: String) =
+        if (builtins.commands[word] != null) {
+            CommandSearchResult(CommandType.BUILT_IN, word)
+        } else {
+            null
+        }
+
+    private fun findScript(word: String): CommandSearchResult? {
+        // See if this is a .kash.kts script
+        scriptPath.forEach { path ->
+            val c1 =
+                    if (word.startsWith(".") || word.startsWith("/")) word
+                    else path + File.separatorChar + word
+            val file = File("$c1.kash.kts")
+            if (file.exists() and file.isFile) {
+                log.debug("Found script: " + file.absolutePath)
+                return CommandSearchResult(CommandType.SCRIPT, file.absolutePath)
+            }
+        }
+
+        return null
+    }
+
     /**
      * Need to introduce two implementations of this method: one for Windows and one for others.
      * For Windows, need to 1) look up commands that end with .exe, .cmd, .bat and 2) manually
      * add support for #! scripts.
      */
-    override fun findCommand(word: String) : Result<String> {
+    private fun findExecutable(word: String) : CommandSearchResult? {
         // See if we can find this command on the path
         paths.forEach { path ->
             listOf("", ".exe", ".cmd").forEach { suffix ->
@@ -399,16 +448,17 @@ class Shell(terminal: Terminal): BuiltinContext, CommandRunner {
                     if (chars[0] == '#' && chars[1] == '!') {
                         // TOOD on Windows: shebang script
                     }
-                    return Result(File(c1).absolutePath)
+                    return CommandSearchResult(CommandType.COMMAND, File(c1).absolutePath)
                 }
             }
         }
+
         // See if this word is an environment assignment
 //        if (word.contains("=")) {
 //            return Result(word)
 //        }
 
-        return Result(null, "No \"$word\" found in " + paths.joinToString(", "))
+        return null
     }
 }
 

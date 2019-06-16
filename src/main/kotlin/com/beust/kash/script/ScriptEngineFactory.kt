@@ -30,8 +30,7 @@ class ScriptEngineFactory : KotlinJsr223JvmScriptEngineFactoryBase() {
         //
         // Read ~/.kash.json, configure the classpath of the script engine
         //
-        val dotKashReader = DotKashReader()
-        val userClasspath = dotKashReader.dotKash?.classpath?.map { File(it) } ?: emptyList()
+        val userClasspath = DotKashReader.dotKash?.classPath?.map { File(it) } ?: emptyList()
 
         val currentClassLoader = Thread.currentThread().contextClassLoader
         val classPath =
