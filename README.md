@@ -224,7 +224,7 @@ that you need.
 
 ## Writing scripts with Kash
 
-Kash script files are regular Kotlin Script files but with a few [additions](additions). We recommend using the suffix
+Kash script files are regular Kotlin Script files but with a few [additions](Kash-additions). We recommend using the suffix
 `.kash.kts` for your Kash files, which will provide additional support in IDEA for these files.
 
 Here is an example Kash script named `a.kash.kts`:
@@ -256,7 +256,7 @@ This logic is executed by the following code from the script file:
 if (args.size > 0) hi(args[0]) else hi()
 ```
 
-## [Kash additions](additions)
+## Kash additions]
 
 In addition to regular `.kts` files, Kash has a few addition functionalities:
 
