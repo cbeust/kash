@@ -189,6 +189,78 @@ Cedric/kotlin$
 
 All the functions supported by Kash are defined in the file `Predef.kts`, which is shipped inside of Kash. You can [browse this file yourself](https://github.com/cbeust/kash/blob/master/src/main/resources/kts/Predef.kts) to get an idea of what other functionalities are available.
 
+# Programming Kash
+
+Kash offers a variety of functionalities to let you program it in Kotlin.
+
+## Kash configuration files
+
+Kash can be configured with two different files: `~/.kash.json`  and `~/.kash.kts`.
+
+### ~/.kash.json
+
+This file is a JSON file that lets you configure Kash with a few parameters:
+
+- `classPath`:  An array of strings pointing to the classpath that Kash will be started with.
+- `scriptPath`: An array of strings pointing to directories where scripts are located
+
+Here is a sample `~/.kash.json`:
+
+```json
+{
+    "classPath": [
+        "~/build/classes"
+    ],
+    "scriptPath": [
+        "~/kash-scripts"
+    ]
+}
+```
+
+### ~/.kash.kts
+
+This file contains valid Kotlin code and will be run at start up, allowing you to define functions and variables
+that you need.
+
+## Writing scripts with Kash
+
+Kash script files are regular Kotlin Script files but with a few additions. We recommend using the suffix
+`.kash.kts` for your Kash files, which will provide additional support in IDEA for these files.
+
+Here is an example Kash script named `a.kash.kts`:
+
+```kotlin
+// a.kash.kts
+fun hi(s: String = "Unknown") = println("Hello, $s")
+
+if (args.size > 0) hi(args[0]) else hi()
+```
+
+Assuming you have defined your `~/.kash.json` as shown above, save this file as `~/.kash-scripts/a.kash.kts`. All you
+need to do now is just type `a` in Kash and this code will be executed:
+
+```
+$ a
+Hello, Unknown
+```
+Since this script file contains some code to parse the `args` parameter, you can actually pass it parameters:
+
+```
+$ a Cedric
+Hello, Cedric
+```
+
+This logic is executed by the following code from the script file:
+
+```
+if (args.size > 0) hi(args[0]) else hi()
+```
+
+Kash scripts automatically define a variable called `args` which contains the arguments passed to the script invocation.
+
+
+### ~/.kash.kts
+
 
 # Community
 
