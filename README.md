@@ -256,7 +256,7 @@ This logic is executed by the following code from the script file:
 if (args.size > 0) hi(args[0]) else hi()
 ```
 
-## Kash additions]
+## Kash additions
 
 In addition to regular `.kts` files, Kash has a few addition functionalities:
 
