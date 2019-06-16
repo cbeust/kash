@@ -256,6 +256,17 @@ This logic is executed by the following code from the script file:
 if (args.size > 0) hi(args[0]) else hi()
 ```
 
+Of course, as soon as you load the script, the function `hi()` gets defined, so you can still invoke it directly
+if you prefer:
+
+```
+$ hi()
+Hello, Unknown
+$ hi("Cedric")
+Hello, Cedric
+$
+```
+
 ## Kash additions
 
 In addition to regular `.kts` files, Kash has a few additional functionalities.
@@ -279,6 +290,7 @@ $
 ```
 
 Of course, you can also put this file on your `scriptPath` and then just invoke it with `log`.
+
 
 # Community
 
