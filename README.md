@@ -258,7 +258,7 @@ if (args.size > 0) hi(args[0]) else hi()
 
 ## Kash additions
 
-In addition to regular `.kts` files, Kash has a few addition functionalities:
+In addition to regular `.kts` files, Kash has a few additional functionalities.
 
 ### Annotation `@file:DependsOn`
 
@@ -279,8 +279,6 @@ $
 ```
 
 Of course, you can also put this file on your `scriptPath` and then just invoke it with `log`.
-
-Kash scripts automatically define a variable called `args` which contains the arguments passed to the script invocation.
 
 # Community
 
