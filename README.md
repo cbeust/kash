@@ -202,7 +202,7 @@ Kash can be configured with two different files: `~/.kash.json`  and `~/.kash.kt
 This file is a JSON file that lets you configure Kash with a few parameters:
 
 - `classPath`:  An array of strings pointing to the classpath that Kash will be started with.
-- `scriptPath`: An array of strings pointing to directories where scripts are located
+- `scriptPath`: An array of strings pointing to directories where scripts are located.
 
 Here is a sample `~/.kash.json`:
 
@@ -224,7 +224,7 @@ that you need.
 
 ## Writing scripts with Kash
 
-Kash script files are regular Kotlin Script files but with a few additions. We recommend using the suffix
+Kash script files are regular Kotlin Script files but with a few [additions](additions). We recommend using the suffix
 `.kash.kts` for your Kash files, which will provide additional support in IDEA for these files.
 
 Here is an example Kash script named `a.kash.kts`:
@@ -256,11 +256,31 @@ This logic is executed by the following code from the script file:
 if (args.size > 0) hi(args[0]) else hi()
 ```
 
+## [Kash additions](additions)
+
+In addition to regular `.kts` files, Kash has a few addition functionalities:
+
+### Annotation `@file:DependsOn`
+
+This annotation allows you to tell Kash that your script depends on extra libraries which are defined by Maven coordinates. Here is a small example that automatically loads the `log4j` library:
+
+```kotlin
+// log.kash.kts
+@file:DependsOn("log4j:log4j:1.2.12")
+val log = org.apache.log4j.Logger.getRootLogger()
+println(log.name)
+```
+
+One way to invoke this file:
+```
+$ . log.kash.kts
+root
+$
+```
+
+Of course, you can also put this file on your `scriptPath` and then just invoke it with `log`.
+
 Kash scripts automatically define a variable called `args` which contains the arguments passed to the script invocation.
-
-
-### ~/.kash.kts
-
 
 # Community
 
