@@ -7,8 +7,8 @@ import org.testng.annotations.Test
 
 @Test
 class ShellTest {
-    private val shell = Shell(TerminalBuilder.builder().build())
-    private val Shell.CommandResult.out get() = this.stdout?.replace("\r", "")
+    private val shell = Shell2(TerminalBuilder.builder().build())
+    private val CommandResult.out get() = this.stdout?.replace("\r", "")
 
     @DataProvider
     fun simpleDp() = arrayOf(
@@ -30,7 +30,7 @@ class ShellTest {
     fun env() {
         val result = shell.runLine("echo \$A", false)
         assertThat(result.stdout).isNull()
-        shell.runLine("A=B", false)
+        shell.runLine("""kenv("A","B")""", false)
         val result2 = shell.runLine("echo \$A", false)
         assertThat(result2.out).isEqualTo("B\n")
     }

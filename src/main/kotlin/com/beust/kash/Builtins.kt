@@ -14,11 +14,12 @@ interface BuiltinContext {
     val paths: ArrayList<String>
     val directoryStack: Stack<String>
 
-    fun findCommand(word: String): Shell.CommandSearchResult?
+//    fun findCommand(word: String): CommandFinder.CommandSearchResult?
 }
 
-class Builtins(private val context: BuiltinContext, val engine: Engine) {
-    val commands: HashMap<String, KFunction1<List<String>, Shell.CommandResult>> = hashMapOf(
+class Builtins(private val context: KashContext, val engine: Engine,
+        private val executableFinder: ICommandFinder) {
+    val commands: HashMap<String, KFunction1<List<String>, CommandResult>> = hashMapOf(
             "cd" to ::cd,
             "pwd" to ::pwd,
             "." to ::dot,
@@ -27,37 +28,37 @@ class Builtins(private val context: BuiltinContext, val engine: Engine) {
             "log" to ::log
     )
 
-    private fun log(words: List<String>): Shell.CommandResult {
+    private fun log(words: List<String>): CommandResult {
         val root = org.slf4j.LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
         if (root.level == Level.DEBUG) root.level = Level.OFF
             else root.level = Level.DEBUG
-        return Shell.CommandResult(0)
+        return CommandResult(0)
     }
 
-    private fun env(words: List<String>): Shell.CommandResult {
+    private fun env(words: List<String>): CommandResult {
         val r = engine.env
-        return Shell.CommandResult(0, r.toString(), null)
+        return CommandResult(0, r.toString(), null)
     }
 
-    private fun which(words: List<String>): Shell.CommandResult {
-        val commandResult = context.findCommand(words[1])
+    private fun which(words: List<String>): CommandResult {
+        val commandResult = executableFinder.findCommand(words[1])
         val command = commandResult?.path
 
         if (command != null) {
-            return Shell.CommandResult(0, command)
+            return CommandResult(0, command)
         } else {
-            return Shell.CommandResult(1)
+            return CommandResult(1)
         }
     }
 
-    private fun dot(words: List<String>): Shell.CommandResult {
+    private fun dot(words: List<String>): CommandResult {
         println("Running script " + words[1])
         val r = engine.eval(FileReader(File(words[1])), words.subList(2, words.size))
 
-        return Shell.CommandResult(0)
+        return CommandResult(0)
     }
 
-    private fun cd(words: List<String>): Shell.CommandResult {
+    private fun cd(words: List<String>): CommandResult {
         val stack = context.directoryStack
         val currentDir = stack.peek()
         val targetDir = File(words[1])
@@ -81,16 +82,16 @@ class Builtins(private val context: BuiltinContext, val engine: Engine) {
                 System.err.println("Directory not found: $dir")
                 1
             }
-        return Shell.CommandResult(rc)
+        return CommandResult(rc)
     }
 
-    private fun pwd(words: List<String>): Shell.CommandResult {
+    private fun pwd(words: List<String>): CommandResult {
         val stdout =
             if (context.directoryStack.isEmpty()) {
                 File(".").toString()
             } else {
                 context.directoryStack.peek()
             }
-        return Shell.CommandResult(0, stdout, null)
+        return CommandResult(0, stdout, null)
     }
 }

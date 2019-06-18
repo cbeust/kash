@@ -15,7 +15,7 @@ class Main {
         try {
             val terminal = TerminalBuilder.builder()
                     .build()
-            Shell(terminal).run()
+            Shell2(terminal).run()
         } catch (e: IOException) {
             e.printStackTrace()
         }

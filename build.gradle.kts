@@ -38,6 +38,7 @@ dependencies {
             "org.fusesource:fuse-project:7.2.0.redhat-060",
             "org.slf4j:slf4j-api:1.8.0-beta4",
             "ch.qos.logback:logback-classic:1.3.0-alpha4",
+            "com.google.inject:guice:4.2.2",
             "org.apache.ivy:ivy:2.4.0")
         .forEach { compile(it) }
 
