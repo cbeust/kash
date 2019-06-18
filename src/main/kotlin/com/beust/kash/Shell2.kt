@@ -16,28 +16,25 @@ interface LineRunner {
 }
 
 class Shell2 @Inject constructor(private val terminal: Terminal,
-        private val engine: Engine, private val context: KashContext) : LineRunner {
+        private val engine: Engine, private val context: KashContext,
+        private val builtins: Builtins,
+        private val executableFinder: ExecutableFinder,
+        private val scriptFinder: ScriptFinder,
+        private val builtinFinder: BuiltinFinder) : LineRunner {
     private val log = LoggerFactory.getLogger(Shell2::class.java)
 
     private val DOT_KASH = File(System.getProperty("user.home"), ".kash.json")
     private val KASH_STRINGS = listOf("Kash.ENV", "Kash.PATHS", "Kash.PROMPT", "Kash.DIRS")
 
     private val reader: LineReader
-    private val builtins: Builtins
     private val directoryStack: Stack<String> get() = engine.directoryStack
     private val commandFinder: CommandFinder
     private val commandRunner: CommandRunner
-    private val executableFinder: ICommandFinder
-    private val builtinsFinder: ICommandFinder
-    private val scriptFinder: ICommandFinder
 
     init {
         //
         // Configure the line reader with the tab completers
         //
-
-        executableFinder = ExecutableFinder(context.paths)
-        builtins = Builtins(context, engine, executableFinder)
         reader = LineReaderBuilder.builder()
                 .completer(StringsCompleter(builtins.commands.keys))
                 .completer(StringsCompleter(KASH_STRINGS))
@@ -45,9 +42,7 @@ class Shell2 @Inject constructor(private val terminal: Terminal,
                 .terminal(terminal)
                 .build()
         directoryStack.push(File(".").absoluteFile.canonicalPath)
-        builtinsFinder = BuiltinFinder(builtins)
-        scriptFinder = ScriptFinder(context.scriptPath)
-        commandFinder = CommandFinder(listOf(builtinsFinder, scriptFinder, executableFinder))
+        commandFinder = CommandFinder(listOf(builtinFinder, scriptFinder, executableFinder))
         commandRunner = CommandRunner(builtins, engine, commandFinder, context)
 
         //

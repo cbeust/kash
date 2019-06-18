@@ -2,6 +2,7 @@ package com.beust.kash
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
+import com.google.inject.Inject
 import java.io.File
 import java.io.FileReader
 import java.util.*
@@ -9,16 +10,8 @@ import kotlin.reflect.KFunction1
 
 
 
-interface BuiltinContext {
-    val env: Map<String, String>
-    val paths: ArrayList<String>
-    val directoryStack: Stack<String>
-
-//    fun findCommand(word: String): CommandFinder.CommandSearchResult?
-}
-
-class Builtins(private val context: KashContext, val engine: Engine,
-        private val executableFinder: ICommandFinder) {
+class Builtins @Inject constructor(private val context: KashContext, val engine: Engine,
+        private val executableFinder: ExecutableFinder) {
     val commands: HashMap<String, KFunction1<List<String>, CommandResult>> = hashMapOf(
             "cd" to ::cd,
             "pwd" to ::pwd,

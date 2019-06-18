@@ -1,5 +1,6 @@
 package com.beust.kash
 
+import com.google.inject.Inject
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileReader
@@ -10,7 +11,7 @@ interface ICommandFinder {
     fun findCommand(word: String): CommandFinder.CommandSearchResult?
 }
 
-class ExecutableFinder(private val paths: List<String>): ICommandFinder {
+class ExecutableFinder @Inject constructor (private val paths: List<String>): ICommandFinder {
     /**
      * Need to introduce two implementations of this method: one for Windows and one for others.
      * For Windows, need to 1) look up commands that end with .exe, .cmd, .bat and 2) manually
@@ -38,7 +39,7 @@ class ExecutableFinder(private val paths: List<String>): ICommandFinder {
     }
 }
 
-class ScriptFinder(private val scriptPath: List<String>): ICommandFinder {
+class ScriptFinder @Inject constructor (private val scriptPath: List<String>): ICommandFinder {
     private val log = LoggerFactory.getLogger(ScriptFinder::class.java)
 
     override fun findCommand(word: String): CommandFinder.CommandSearchResult? {
@@ -58,7 +59,7 @@ class ScriptFinder(private val scriptPath: List<String>): ICommandFinder {
     }
 }
 
-class BuiltinFinder(private val builtins: Builtins): ICommandFinder {
+class BuiltinFinder @Inject constructor (private val builtins: Builtins): ICommandFinder {
     override fun findCommand(word: String) =
         if (builtins.commands[word] != null) {
             CommandFinder.CommandSearchResult(CommandType.BUILT_IN, word)
