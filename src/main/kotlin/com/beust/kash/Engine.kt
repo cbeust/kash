@@ -1,11 +1,12 @@
 package com.beust.kash
 
+import com.google.inject.Inject
 import java.io.Reader
 import java.util.*
 import javax.script.ScriptContext
 import javax.script.ScriptEngine
 
-class Engine(private val engine: ScriptEngine) {
+class Engine @Inject constructor(private val engine: ScriptEngine) {
     companion object Engine {
         const val ARGS = "args"
     }

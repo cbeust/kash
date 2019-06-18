@@ -1,8 +1,11 @@
 package com.beust.kash
 
+import com.google.inject.Inject
+import com.google.inject.Singleton
 import java.util.*
 
-class KashContext(private val engine: Engine) {
+@Singleton
+class KashContext @Inject constructor(private val engine: Engine) {
     val directoryStack: Stack<String>
         get() = synchronized(engine) {
             return engine.eval("Kash.DIRS") as Stack<String>

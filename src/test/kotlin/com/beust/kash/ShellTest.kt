@@ -1,13 +1,19 @@
 package com.beust.kash
 
+import com.google.inject.Guice
 import org.assertj.core.api.Assertions.assertThat
-import org.jline.terminal.TerminalBuilder
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 @Test
 class ShellTest {
-    private val shell = Shell2(TerminalBuilder.builder().build())
+    private val shell: Shell2
+
+    init {
+        val injector = Guice.createInjector(KashModule())
+        shell = injector.getInstance(Shell2::class.java)
+
+    }
     private val CommandResult.out get() = this.stdout?.replace("\r", "")
 
     @DataProvider

@@ -1,5 +1,6 @@
 package com.beust.kash
 
+import com.google.inject.Inject
 import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.impl.completer.StringsCompleter
@@ -7,46 +8,30 @@ import org.jline.terminal.Terminal
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileReader
-import java.io.InputStreamReader
 import java.nio.file.Paths
 import java.util.*
-import javax.script.ScriptEngineManager
 
 interface LineRunner {
     fun runLine(line: String, inheritIo: Boolean): CommandResult
 }
 
-class Shell2(terminal: Terminal) : LineRunner {
+class Shell2 @Inject constructor(private val terminal: Terminal,
+        private val engine: Engine, private val context: KashContext) : LineRunner {
     private val log = LoggerFactory.getLogger(Shell2::class.java)
 
     private val DOT_KASH = File(System.getProperty("user.home"), ".kash.json")
-    private val PREDEF = "kts/Predef.kts"
     private val KASH_STRINGS = listOf("Kash.ENV", "Kash.PATHS", "Kash.PROMPT", "Kash.DIRS")
 
     private val reader: LineReader
     private val builtins: Builtins
-    private val engine: Engine
     private val directoryStack: Stack<String> get() = engine.directoryStack
     private val commandFinder: CommandFinder
     private val commandRunner: CommandRunner
-    private val context: KashContext
     private val executableFinder: ICommandFinder
     private val builtinsFinder: ICommandFinder
     private val scriptFinder: ICommandFinder
 
     init {
-        val kotlinEngine = ScriptEngineManager().getEngineByExtension("kash.kts")
-                ?: throw IllegalArgumentException("Couldn't find a script engine for .kash.kts")
-        //
-        // Read Predef
-        //
-        val predef = InputStreamReader(this::class.java.classLoader.getResource(PREDEF).openStream())
-        kotlinEngine.eval(predef)
-        log.debug("Read $PREDEF")
-
-        engine = Engine(kotlinEngine)
-        context = KashContext(engine)
-
         //
         // Configure the line reader with the tab completers
         //
