@@ -24,7 +24,10 @@ class Main {
         setIdeaIoUseFallback()
         try {
             val injector = Guice.createInjector(KashModule())
-            injector.getInstance(Shell2::class.java).run()
+            val engine = injector.getInstance(Engine::class.java)
+            val shell = injector.getInstance(Shell2::class.java)
+            engine.lineRunner = shell
+            shell.run()
         } catch (e: IOException) {
             e.printStackTrace()
         }
@@ -55,6 +58,5 @@ class KashModule() : AbstractModule() {
         bind(KashContext::class.java).toInstance(context)
         bind(ExecutableFinder::class.java).toInstance(ExecutableFinder(context.paths))
         bind(ScriptFinder::class.java).toInstance(ScriptFinder(context.scriptPath))
-
     }
 }

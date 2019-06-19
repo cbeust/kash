@@ -10,7 +10,8 @@ import kotlin.reflect.KFunction1
 
 
 
-class Builtins @Inject constructor(private val context: KashContext, val engine: Engine,
+class Builtins @Inject constructor(private val context: KashContext,
+        private val engine: Engine,
         private val executableFinder: ExecutableFinder) {
     val commands: HashMap<String, KFunction1<List<String>, CommandResult>> = hashMapOf(
             "cd" to ::cd,

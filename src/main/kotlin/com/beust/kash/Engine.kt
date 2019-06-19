@@ -7,13 +7,17 @@ import javax.script.ScriptContext
 import javax.script.ScriptEngine
 
 class Engine @Inject constructor(private val engine: ScriptEngine) {
+    var lineRunner: LineRunner? = null
+
     companion object Engine {
         const val ARGS = "args"
+        const val LINE_RUNNER = "lineRunner"
     }
 
     fun eval(script: Reader, args: List<String> = emptyList()): Any? {
         // Temporary hack that should be removed when 1.3.50 comes out
         engine.getBindings(ScriptContext.ENGINE_SCOPE)[ARGS] = args
+        engine.getBindings(ScriptContext.ENGINE_SCOPE)[LINE_RUNNER] = lineRunner
         val result = engine.eval(script)
         return result
     }

@@ -1,6 +1,7 @@
 package com.beust.kash
 
 import com.google.inject.Inject
+import com.google.inject.Singleton
 import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.impl.completer.StringsCompleter
@@ -15,12 +16,15 @@ interface LineRunner {
     fun runLine(line: String, inheritIo: Boolean): CommandResult
 }
 
-class Shell2 @Inject constructor(private val terminal: Terminal,
+@Suppress("PrivatePropertyName")
+@Singleton
+class Shell2 @Inject constructor(terminal: Terminal,
         private val engine: Engine, private val context: KashContext,
-        private val builtins: Builtins,
-        private val executableFinder: ExecutableFinder,
-        private val scriptFinder: ScriptFinder,
-        private val builtinFinder: BuiltinFinder) : LineRunner {
+        builtins: Builtins,
+        executableFinder: ExecutableFinder,
+        scriptFinder: ScriptFinder,
+        builtinFinder: BuiltinFinder) : LineRunner {
+
     private val log = LoggerFactory.getLogger(Shell2::class.java)
 
     private val DOT_KASH = File(System.getProperty("user.home"), ".kash.json")
@@ -116,7 +120,7 @@ class Shell2 @Inject constructor(private val terminal: Terminal,
         return result ?: CommandResult(1, "Couldn't parse $line")
     }
 
-    private fun prompt(): String {
+    private fun defaultPrompt(): String {
         val path = Paths.get(directoryStack.peek())
         val size = path.nameCount
         val result = if (size > 2) path.getName(size - 2).toString() + "/" + path.getName(size - 1).toString()
@@ -125,7 +129,25 @@ class Shell2 @Inject constructor(private val terminal: Terminal,
         return result + dollar
     }
 
-    private val tokenTransformers = listOf<TokenTransformer>(
+    private fun prompt(): String {
+        val p = engine.prompt
+        return if (p.isBlank()) {
+            defaultPrompt()
+        } else {
+            if (p.startsWith("`") && p.endsWith("`")) {
+                val cr = runLine(p.substring(1, p.length - 1), inheritIo = false)
+                if (cr.returnCode == 0 && cr.stdout != null) {
+                    cr.stdout
+                } else {
+                    "Error running command $p: '${cr.stderr!!}  "
+                }
+            } else {
+                p
+            }
+        }
+    }
+
+    private val tokenTransformers = listOf(
             TildeTransformer(),
             GlobTransformer(directoryStack),
             BackTickTransformer(this),
