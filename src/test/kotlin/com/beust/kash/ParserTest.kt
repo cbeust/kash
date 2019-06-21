@@ -15,6 +15,19 @@ class ParserTest {
     private fun and() = Token.And()
 
     @DataProvider
+    fun lexicalDp2() = arrayOf(
+            arrayOf("ls -l", listOf("ls", "-l"), false),
+            arrayOf("ls -l &", listOf("ls", "-l"), true)
+    )
+
+    @Test(dataProvider = "lexicalDp2")
+    fun lexical2(line: String, words: List<String>, background: Boolean){
+        val result = Parser2(idTransformer).parse(line)
+        assertThat(result?.words).isEqualTo(words)
+        assertThat(result?.background).isEqualTo(background)
+    }
+
+    @DataProvider
     fun lexicalDp() = arrayOf(
         arrayOf("test()", listOf(word("test"), Token.LeftParenthesis(), Token.RightParenthesis())),
         arrayOf("a 2>foo", listOf(word("a"), Token.TwoGreater(), word("foo"))),

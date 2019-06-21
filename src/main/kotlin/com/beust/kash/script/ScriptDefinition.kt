@@ -66,9 +66,9 @@ abstract class ScriptDefinition(val jsr223Bindings: Bindings) : ScriptTemplateWi
     // Temporary hack that should be removed when 1.3.50 comes out
      val args: List<String> get() = bindings[Engine.ARGS] as List<String>
 
-    private val lineRunner: LineRunner get() = bindings[Engine.LINE_RUNNER] as LineRunner
+    private val lineRunner: LineRunner? get() = bindings[Engine.LINE_RUNNER] as LineRunner?
 
-    fun os(line: String) = lineRunner.runLine(line, false)
+    fun os(line: String) = "hello"//: CommandResult? = lineRunner?.runLine(line, false)
 }
 
 object CompilationConfiguration : ScriptCompilationConfiguration(

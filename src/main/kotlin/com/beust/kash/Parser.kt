@@ -1,8 +1,9 @@
 package com.beust.kash
 
+import com.beust.kash.Exec.Companion.toExec
+
 //val idTransformer: (Token.Word, String) -> String
 //        = {word: Token.Word, s: String -> s }
-
 
 class Parser(private val transform: TokenTransform) {
 
@@ -93,7 +94,8 @@ class Parser(private val transform: TokenTransform) {
         val result = arrayListOf<Command>()
         var index = 0
 
-        while (index < tokens.size) {
+        var done = false
+        while (! done && index < tokens.size) {
             val current = arrayListOf<Token>()
 
             fun flushInput() {
@@ -116,25 +118,31 @@ class Parser(private val transform: TokenTransform) {
             while (index < tokens.size && ! tokens[index].isWord && tokens[index] != Token.LeftParenthesis()) index++
 
             // Parse words
-            while (index < tokens.size && ! tokens[index].isSeparator) {
+            while (! done && index < tokens.size && ! tokens[index].isSeparator) {
                 if (tokens[index] == Token.LeftParenthesis()) {
-                    val right = tokens.indexOfFirst() { it == Token.RightParenthesis() }
-                    if (right == -1) {
-                        throw ShellException("Missing closed parenthesis")
+                    if (current.isNotEmpty()) {
+                        // "foo(" is illegal shell syntax, must be a Kotlin expression
+                        current.clear()
+                        done = true
                     } else {
-                        val parenContent = tokens.subList(index + 1, right)
-                        if (parenContent.isNotEmpty()) {
-                            val subCommands = parseTokens(parenContent, pipeList, andList)
-                            subCommands.forEach {
-                                index += it.tokens.size + 2
-                                val background =
-                                    if (index < tokens.size - 1 && tokens[index + 1] == Token.And()) {
-                                        index++
-                                        true
-                                    } else {
-                                        false
-                                    }
-                                result.add(Command.ParenCommand(it, background))
+                        val right = tokens.indexOfFirst() { it == Token.RightParenthesis() }
+                        if (right == -1) {
+                            throw ShellException("Missing closed parenthesis")
+                        } else {
+                            val parenContent = tokens.subList(index + 1, right)
+                            if (parenContent.isNotEmpty()) {
+                                val subCommands = parseTokens(parenContent, pipeList, andList)
+                                subCommands.forEach {
+                                    index += it.tokens.size + 2
+                                    val background =
+                                            if (index < tokens.size - 1 && tokens[index + 1] == Token.And()) {
+                                                index++
+                                                true
+                                            } else {
+                                                false
+                                            }
+                                    result.add(Command.ParenCommand(it, background))
+                                }
                             }
                         }
                     }
@@ -159,41 +167,14 @@ class Parser(private val transform: TokenTransform) {
 
     private fun buildAndList(andList: List<List<Token>>): Command.AndCommands {
         val background = false
-        return Command.AndCommands(andList.map { toExec(it) }, background)
+        return Command.AndCommands(andList.map { toExec(it, transform) }, background)
     }
 
     private fun buildPipeList(pipeList: List<List<Token>>)
-            = Command.PipeCommands(pipeList.map { toExec(it) }, false)
-
-    private fun toExec(tokens: List<Token>): Exec {
-        var i = 0
-        var input: String? = null
-        var output: String? = null
-        var error: String? = null
-        while (i < tokens.size) {
-            if (tokens[i] is Token.Less) {
-                if (i + 1 < tokens.size) {
-                    input = (tokens[i + 1] as Token.Word).name[0]
-                    i++
-                }
-            } else if (tokens[i] is Token.Greater) {
-                if (i + 1 < tokens.size) {
-                    output = (tokens[i + 1] as Token.Word).name[0]
-                    i++
-                }
-            } else if (tokens[i] is Token.TwoGreater) {
-                if (i + 1 < tokens.size) {
-                    error = (tokens[i + 1] as Token.Word).name[0]
-                    i++
-                }
-            }
-            i++
-        }
-        return Exec(tokens, input, output, error, transform)
-    }
+            = Command.PipeCommands(pipeList.map { toExec(it, transform) }, false)
 
     private fun buildCommand(tokens: List<Token>): Command.SingleCommand {
         val background = tokens[tokens.size - 1] == Token.And()
-        return Command.SingleCommand(toExec(tokens), background)
+        return Command.SingleCommand(toExec(tokens, transform), background)
     }
 }
