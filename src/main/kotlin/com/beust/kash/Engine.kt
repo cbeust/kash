@@ -14,15 +14,20 @@ class Engine @Inject constructor(private val engine: ScriptEngine) {
         const val LINE_RUNNER = "lineRunner"
     }
 
-    fun eval(script: Reader, args: List<String> = emptyList()): Any? {
+    private fun setUpBindings(args: List<String> = emptyList()) {
         // Temporary hack that should be removed when 1.3.50 comes out
         engine.getBindings(ScriptContext.ENGINE_SCOPE)[ARGS] = args
         engine.getBindings(ScriptContext.ENGINE_SCOPE)[LINE_RUNNER] = lineRunner
+    }
+
+    fun eval(script: Reader, args: List<String> = emptyList()): Any? {
+        setUpBindings(args)
         val result = engine.eval(script)
         return result
     }
 
     fun eval(script: String): Any? {
+        setUpBindings()
         return engine.eval(script)
     }
 
