@@ -1,0 +1,79 @@
+options {
+    STATIC = false ;
+}
+
+PARSER_BEGIN(KashParser)
+
+package com.beust.kash.parser;
+
+import java.util.List;
+import java.util.ArrayList;
+
+public class KashParser {
+    public static class Command<T> {
+        public final T content;
+        public Command(T content) { this.content = content; }
+    }
+
+    public static class SingleCommand extends Command<List<String>> {
+        public SingleCommand(List<String> content) { super(content); }
+    }
+
+    public static class PipeCommand extends Command<List<List<String>>> {
+        public PipeCommand(List<List<String>> content) { super(content); }
+    }
+
+    public static class AndAndCommand extends Command<List<List<String>>> {
+        public AndAndCommand(List<List<String>> content) { super(content); }
+    }
+}
+
+PARSER_END(KashParser)
+
+SKIP:  { " " | "\t" | "\n" | "\r"                    }
+TOKEN: { "(" | ")" | <ANDAND: "&&"> | <PIPE: "|"> | <NUM: (["0"-"9"])+> | <WORD: (["-", "a"-"z", "A"-"Z"])+> }
+
+Command Goal2():
+{
+    Token t;
+    boolean isPipe = false;
+    boolean isAndAnd = false;
+    List<String> singleCommandWords = new ArrayList<String>();
+    List<String> words = new ArrayList<String>();
+    List<List<String>> allWords = new ArrayList<List<String>>();
+}
+{
+    (
+        (t = <WORD>
+        {
+            System.out.println("ADDING 1 " + t.image);
+            singleCommandWords.add(t.image);
+            words.add(t.image);
+        })+
+        {
+            System.out.println("ALLWORDS 1: " + words);
+            allWords.add(new ArrayList(words));
+            words.clear();
+        }
+         ( (<PIPE> { isPipe = true; } | <ANDAND> { isAndAnd = true; }) ((t = <WORD>
+         {
+            System.out.println("ADDING 2 " + t.image);
+            words.add(t.image);
+         }
+         )+
+          )
+         {
+            System.out.println("ALLWORDS 2: " + words);
+            allWords.add(new ArrayList(words));
+            words.clear();
+         }
+          )*
+    )
+     <EOF>
+     {
+        System.out.println("Returning command " + words + " " + allWords);
+        if (isPipe) return new PipeCommand(allWords);
+        else if (isAndAnd) return new AndAndCommand(allWords);
+        else return new SingleCommand(singleCommandWords);
+     }
+}

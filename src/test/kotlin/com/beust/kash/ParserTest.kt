@@ -1,8 +1,10 @@
 package com.beust.kash
 
+import com.beust.kash.parser.KashParser
 import org.assertj.core.api.Assertions.assertThat
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
+import java.io.StringReader
 
 val idTransformer: TokenTransform = { word: Token.Word, s: List<String> -> s }
 
@@ -13,6 +15,32 @@ class ParserTest {
     private fun pipe() = Token.Pipe()
     private fun andAnd() = Token.AndAnd()
     private fun and() = Token.And()
+
+    @DataProvider
+    fun singleCommandDp() = arrayOf(
+            arrayOf("ls -l", KashParser.SingleCommand(listOf("ls", "-l")))
+    )
+
+    @Test(dataProvider = "singleCommandDp")
+    fun singleCommand(line: String, command: KashParser.Command<List<String>>) {
+        val sc = KashParser(StringReader(line))
+        val goal = sc.Goal2()
+        assertThat(goal.content).isEqualTo(command.content)
+
+    }
+
+    @DataProvider
+    fun multiCommandDp() = arrayOf(
+            arrayOf("ls -l | wc -l", KashParser.PipeCommand(listOf(listOf("ls", "-l"), listOf("wc", "-l")))),
+            arrayOf("ls -l && echo a", KashParser.PipeCommand(listOf(listOf("ls", "-l"), listOf("echo", "a"))))
+    )
+
+    @Test(dataProvider = "multiCommandDp")
+    fun multiCommand(line: String, command: KashParser.Command<List<List<String>>>) {
+        val sc = KashParser(StringReader(line))
+        val goal = sc.Goal2()
+        assertThat(goal.content).isEqualTo(command.content)
+    }
 
     @DataProvider
     fun lexicalDp2() = arrayOf(

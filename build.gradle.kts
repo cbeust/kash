@@ -29,9 +29,16 @@ plugins {
     idea
     id("org.jetbrains.kotlin.jvm") version "1.3.40-eap-105"
     id("com.github.johnrengelman.shadow") version "4.0.2"
+    id("ca.coglinc.javacc") version "2.4.0"
 }
 
 val kotlinVer by extra { "1.3.40-eap-105" }
+
+sourceSets {
+    main {
+        java.srcDir("build/generated/javacc")
+    }
+}
 
 dependencies {
     listOf("org.jline:jline:3.11.0",
