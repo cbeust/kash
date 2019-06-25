@@ -9,6 +9,36 @@ import java.io.StringReader
 val idTransformer: TokenTransform = { word: Token.Word, s: List<String> -> s }
 
 @Test
+class Parser3Test {
+    @DataProvider
+    fun singleCommandDp() = arrayOf(
+            arrayOf("ls -l > a.txt", KashParser.SingleCommand(listOf("ls", "-l", ">", "a.txt"))),
+            arrayOf("ls -l", KashParser.SingleCommand(listOf("ls", "-l"))
+            )
+    )
+
+    @Test(dataProvider = "singleCommandDp")
+    fun singleCommand(line: String, command: KashParser.Command<List<String>>) {
+        val sc = KashParser(StringReader(line))
+        val goal = sc.Goal2()
+        assertThat(goal.content).isEqualTo(command.content)
+    }
+
+    @DataProvider
+    fun multiCommandDp() = arrayOf(
+            arrayOf("ls -l | wc -l", KashParser.PipeCommand(listOf(listOf("ls", "-l"), listOf("wc", "-l")))),
+            arrayOf("ls -l && echo a", KashParser.PipeCommand(listOf(listOf("ls", "-l"), listOf("echo", "a"))))
+    )
+
+    @Test(dataProvider = "multiCommandDp")
+    fun multiCommand(line: String, command: KashParser.Command<List<List<String>>>) {
+        val sc = KashParser(StringReader(line))
+        val goal = sc.Goal2()
+        assertThat(goal.content).isEqualTo(command.content)
+    }
+}
+
+@Test
 class ParserTest {
     private val parser = Parser(idTransformer)
     private fun word(n: String) = Token.Word(StringBuilder(n))

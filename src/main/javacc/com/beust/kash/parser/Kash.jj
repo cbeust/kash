@@ -31,11 +31,15 @@ public class KashParser {
 PARSER_END(KashParser)
 
 SKIP:  { " " | "\t" | "\n" | "\r"                    }
-TOKEN: { "(" | ")" | <ANDAND: "&&"> | <PIPE: "|"> | <NUM: (["0"-"9"])+> | <WORD: (["-", "a"-"z", "A"-"Z"])+> }
+TOKEN: {
+    "(" | ")" | <GT: ">"> | <LT: "<"> | <ANDAND: "&&"> | <PIPE: "|"> | <NUM: (["0"-"9"])+>
+    | <WORD: (["-", ".", "a"-"z", "A"-"Z"]) +>
+     }
 
 Command Goal2():
 {
     Token t;
+    Token r = null;
     boolean isPipe = false;
     boolean isAndAnd = false;
     List<String> singleCommandWords = new ArrayList<String>();
@@ -45,29 +49,32 @@ Command Goal2():
 {
     (
         (t = <WORD>
-        {
-            System.out.println("ADDING 1 " + t.image);
-            singleCommandWords.add(t.image);
-            words.add(t.image);
-        })+
-        {
-            System.out.println("ALLWORDS 1: " + words);
-            allWords.add(new ArrayList(words));
-            words.clear();
-        }
-         ( (<PIPE> { isPipe = true; } | <ANDAND> { isAndAnd = true; }) ((t = <WORD>
-         {
-            System.out.println("ADDING 2 " + t.image);
-            words.add(t.image);
-         }
-         )+
-          )
-         {
-            System.out.println("ALLWORDS 2: " + words);
-            allWords.add(new ArrayList(words));
-            words.clear();
-         }
-          )*
+            {
+                System.out.println("ADDING 1 " + t.image);
+                singleCommandWords.add(t.image);
+                words.add(t.image);
+            })+
+            {
+                System.out.println("ALLWORDS 1: " + words);
+                allWords.add(new ArrayList(words));
+                words.clear();
+            }
+
+        ( <GT> r = <WORD> { singleCommandWords.add(">"); singleCommandWords.add(r.image); } )*
+
+        ( (<PIPE> { isPipe = true; } | <ANDAND> { isAndAnd = true; }) ((t = <WORD>
+            {
+               System.out.println("ADDING 2 " + t.image);
+               words.add(t.image);
+            }
+            )+
+            )
+             {
+                System.out.println("ALLWORDS 2: " + words);
+                allWords.add(new ArrayList(words));
+                words.clear();
+             }
+              )*
     )
      <EOF>
      {
