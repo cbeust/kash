@@ -16,7 +16,7 @@ public class KashParser {
     }
 
     public static class SingleCommand extends Command<List<String>> {
-        public SingleCommand(List<String> content) { super(content); }
+        public SingleCommand(List<String> content, String input, String output) { super(content); }
     }
 
     public static class PipeCommand extends Command<List<List<String>>> {
@@ -35,6 +35,33 @@ TOKEN: {
     "(" | ")" | <GT: ">"> | <LT: "<"> | <ANDAND: "&&"> | <PIPE: "|"> | <NUM: (["0"-"9"])+>
     | <WORD: (["-", ".", "a"-"z", "A"-"Z"]) +>
      }
+
+Command Goal3():
+{
+    Token word;
+    Token stdout = null;
+    Token stdin = null;
+    Token stderr = null;
+    List<String> singleCommandWords = new ArrayList<String>();
+}
+{
+    (
+        word = <WORD> (<GT> stdout = <WORD>)* (<LT> stdin = <WORD>)*
+        {
+            singleCommandWords.add(word.image);
+            System.out.println("Word: " + word.image);
+            if (stdout != null) System.out.println("     > " + stdout.image);
+            if (stdin != null) System.out.println("     < " + stdin.image);
+        }
+        {
+            return new SingleCommand(singleCommandWords,
+                stdin != null ? stdin.image : null, stdout != null ? stdout .image : null);
+        }
+    ) +
+    <EOF>
+    { return null; }
+}
+
 
 Command Goal2():
 {
@@ -81,6 +108,6 @@ Command Goal2():
         System.out.println("Returning command " + words + " " + allWords);
         if (isPipe) return new PipeCommand(allWords);
         else if (isAndAnd) return new AndAndCommand(allWords);
-        else return new SingleCommand(singleCommandWords);
+        else return new SingleCommand(singleCommandWords, null, null);
      }
 }

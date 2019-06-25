@@ -4,7 +4,8 @@ import me.sargunvohra.lib.cakeparse.api.*
 
 fun main() {
     val idTransformer: TokenTransform = { word: Token.Word, s: List<String> -> s }
-    Parser2(idTransformer).parse("echo a && ls -l && wc")
+    Parser2(idTransformer).parse("ls -l | wc")
+//    Parser2(idTransformer).parse("echo a && ls -l && wc")
 }
 
 class Parser2(private val transform: TokenTransform) {
@@ -13,12 +14,14 @@ class Parser2(private val transform: TokenTransform) {
         val word = token("word", "[-$.~/=*?a-zA-Z0-9]+")
         val ampersand = token("ampersand", "&")
         val andAnd = token("andAnd", "&&")
+        val pipe = token("pipe", "|")
         val singleCommand = oneOrMore(word)
         val andCommand = singleCommand and zeroOrMore(andAnd and singleCommand)
+        val pipeCommand = singleCommand and zeroOrMore(pipe and singleCommand)
         val goal1 = singleCommand and optional(ampersand)
-        val goal = andCommand
+        val goal = andCommand or pipeCommand
 
-        val tokens = setOf(space, word, andAnd, ampersand)
+        val tokens = setOf(space, word, andAnd, ampersand, pipe)
         val result =
             try {
                 val r = tokens.lexer().lex(input).parseToEnd(goal)
