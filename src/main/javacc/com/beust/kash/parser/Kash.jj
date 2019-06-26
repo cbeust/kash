@@ -1,5 +1,6 @@
 options {
     STATIC = false ;
+    DEBUG_PARSER = false;
 }
 
 PARSER_BEGIN(KashParser)
@@ -33,6 +34,15 @@ public class KashParser {
     public static class PipeCommand extends Command<List<List<String>>> {
         public PipeCommand(List<List<String>> content) { super(content); }
     }
+
+
+    public static class SubShell {
+        public final KashParser.PipeCommand command;
+        public SubShell(KashParser.PipeCommand command) {
+            this.command = command;
+        }
+    }
+
 
     public static class SingleCommand extends Command<List<String>> {
         public SingleCommand(List<String> content, String input, String output) { super(content); }
@@ -93,10 +103,15 @@ RedirectionNode Redirection():
     }
 }
 
-void SubShell():
-{}
+KashParser.SubShell SubShell():
 {
-    "(" CompoundList() ")"
+    KashParser.PipeCommand result = null;
+}
+{
+    "(" result = CompoundList() ")"
+    {
+        return new KashParser.SubShell(result);
+    }
 }
 
 KashParser.PipeCommand CompoundList():
