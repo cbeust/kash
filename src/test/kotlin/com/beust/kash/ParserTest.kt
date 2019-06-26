@@ -12,16 +12,21 @@ val idTransformer: TokenTransform = { word: Token.Word, s: List<String> -> s }
 class Parser3Test {
     @DataProvider
     fun singleCommandDp() = arrayOf(
-            arrayOf("ls < b.txt -l > a.txt", KashParser.SingleCommand(listOf("ls", "-l"), "a.txt", null)),
-            arrayOf("ls -l", KashParser.SingleCommand(listOf("ls", "-l"), null, null)
-            )
+            arrayOf("ls", KashParser.SimpleCommand(listOf("ls"), null, null)),
+            arrayOf("ls -l", KashParser.SimpleCommand(listOf("ls", "-l"), null, null)),
+            arrayOf("ls -l > a.txt", KashParser.SimpleCommand(listOf("ls", "-l"), null, "a.txt")),
+            arrayOf("ls -l < b.txt", KashParser.SimpleCommand(listOf("ls", "-l"), "b.txt", null)),
+            arrayOf("ls -l < b.txt > a.txt", KashParser.SimpleCommand(listOf("ls", "-l"), "b.txt", "a.txt"))
     )
 
     @Test(dataProvider = "singleCommandDp")
-    fun singleCommand(line: String, command: KashParser.Command<List<String>>) {
+    fun singleCommand(line: String, command: KashParser.SimpleCommand) {
         val sc = KashParser(StringReader(line))
-        val goal = sc.Goal3()
-        assertThat(goal.content).isEqualTo(command.content)
+        val goal = sc.SimpleCommand()
+        println(goal)
+        assertThat(goal.words).isEqualTo(command.words);
+        assertThat(goal.input).isEqualTo(command.input);
+        assertThat(goal.output).isEqualTo(command.output);
     }
 
     @DataProvider

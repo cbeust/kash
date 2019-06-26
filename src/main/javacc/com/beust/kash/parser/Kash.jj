@@ -10,9 +10,24 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class KashParser {
+    public static class RedirectionNode {
+        public final String symbol;
+        public final String destination;
+        RedirectionNode(String symbol, String destination) { this.symbol = symbol; this.destination = destination; }
+    }
+
     public static class Command<T> {
         public final T content;
         public Command(T content) { this.content = content; }
+    }
+
+    public static class SimpleCommand {
+        public final List<String> words;
+        public final String input;
+        public final String output;
+        public SimpleCommand(List<String> words, String input, String output) {
+            this.words = words; this.input = input; this.output = output;
+        }
     }
 
     public static class SingleCommand extends Command<List<String>> {
@@ -35,6 +50,67 @@ TOKEN: {
     "(" | ")" | <GT: ">"> | <LT: "<"> | <ANDAND: "&&"> | <PIPE: "|"> | <NUM: (["0"-"9"])+>
     | <WORD: (["-", ".", "a"-"z", "A"-"Z"]) +>
      }
+
+void Command():
+{}
+{
+    SimpleCommand() | ShellCommand()
+    <EOF>
+}
+
+KashParser.SimpleCommand SimpleCommand():
+{
+    RedirectionNode redir = null;
+    Token w = null;
+    String input = null;
+    String output = null;
+    List<String> words = new ArrayList<String>();
+}
+{
+    ((w = <WORD> { words.add(w.image); })+)
+    (redir = Redirection() {
+        switch(redir.symbol) {
+            case(">"): output = redir.destination; break;
+            case("<"): input= redir.destination; break;
+        }
+     }
+    )*
+    <EOF>
+    {
+        return new KashParser.SimpleCommand(words, input, output);
+    }
+}
+
+RedirectionNode Redirection():
+{
+    Token c = null;
+    Token t = null;
+}
+{
+    (c = ">" t = <WORD> | c = "<" t = <WORD>)
+    {
+        System.out.println("Redirection: " + t.image);
+        return new KashParser.RedirectionNode(c.image, t.image);
+    }
+}
+
+void SubShell():
+{}
+{
+    "(" CompoundList() ")"
+}
+
+void CompoundList():
+{}
+{
+    SimpleCommand() ("|" SimpleCommand())*
+}
+
+void ShellCommand():
+{}
+{
+    SubShell()
+}
 
 Command Goal3():
 {
