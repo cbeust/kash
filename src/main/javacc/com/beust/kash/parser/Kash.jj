@@ -1,4 +1,4 @@
-options {
+    options {
     STATIC = false ;
     DEBUG_PARSER = false;
 }
@@ -31,14 +31,18 @@ public class KashParser {
         }
     }
 
+    public static class CompoundList extends Command<List<SimpleCommand>> {
+        public CompoundList(List<SimpleCommand> content) { super(content); }
+    }
+
     public static class PipeCommand extends Command<List<List<String>>> {
         public PipeCommand(List<List<String>> content) { super(content); }
     }
 
 
     public static class SubShell {
-        public final KashParser.PipeCommand command;
-        public SubShell(KashParser.PipeCommand command) {
+        public final KashParser.CompoundList command;
+        public SubShell(KashParser.CompoundList command) {
             this.command = command;
         }
     }
@@ -105,53 +109,70 @@ RedirectionNode Redirection():
 
 KashParser.SubShell SubShell():
 {
-    KashParser.PipeCommand result = null;
+    CompoundList result = null;
 }
 {
     "(" result = CompoundList() ")"
     {
-        return new KashParser.SubShell(result);
+        return new SubShell(result);
     }
 }
 
-KashParser.PipeCommand CompoundList():
+CompoundList CompoundList():
 {
     KashParser.SimpleCommand c = null;
-    List<List<String>> commands = new ArrayList<List<String>>();
+    List<SimpleCommand> commands = new ArrayList<SimpleCommand>();
 }
 {
-    c = SimpleCommand() { commands.add(c.words); }
-        ("|" c = SimpleCommand() { commands.add(c.words); })*
+    c = SimpleCommand() { commands.add(c); }
+        ("|" c = SimpleCommand() { commands.add(c); })*
 
     {
-        return new KashParser.PipeCommand(commands);
+        return new KashParser.CompoundList(commands);
     }
 }
 
 Command Goal3():
 {
     Token word;
-    Token stdout = null;
-    Token stdin = null;
-    Token stderr = null;
+    Token output = null;
+    Token input = null;
+    Token err = null;
     List<String> singleCommandWords = new ArrayList<String>();
+    List<String> words = new ArrayList<String>();
+
+    boolean isPipe = false;
+    boolean isAndAnd = false;
+    List<List<String>> allWords = new ArrayList<List<String>>();
 }
 {
     (
-        word = <WORD> (<GT> stdout = <WORD>)* (<LT> stdin = <WORD>)*
+        word = <WORD> (<GT> output = <WORD>)* (<LT> input = <WORD>)* (<PIPE> { isPipe = true; })?
         {
-            singleCommandWords.add(word.image);
-            System.out.println("Word: " + word.image);
-            if (stdout != null) System.out.println("     > " + stdout.image);
-            if (stdin != null) System.out.println("     < " + stdin.image);
-        }
-        {
-            return new SingleCommand(singleCommandWords,
-                stdin != null ? stdin.image : null, stdout != null ? stdout .image : null);
+            words.add(word.image);
+            if (isPipe) {
+                allWords.add(new ArrayList(words));
+                words.clear();
+            } else {
+                singleCommandWords.add(word.image);
+            }
         }
     ) +
+
     <EOF>
-    { return null; }
+
+    {
+        if (singleCommandWords.size() > 0) {
+            return new SingleCommand(singleCommandWords,
+                output != null ? output.image : null,
+                input != null ? input.image : null) ;
+        } else if (isPipe) {
+            allWords.add(words);
+            return new PipeCommand(allWords);
+        } else {
+            return null;
+        }
+    }
 }
 
 
