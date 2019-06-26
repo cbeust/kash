@@ -30,12 +30,12 @@ public class KashParser {
         }
     }
 
-    public static class SingleCommand extends Command<List<String>> {
-        public SingleCommand(List<String> content, String input, String output) { super(content); }
-    }
-
     public static class PipeCommand extends Command<List<List<String>>> {
         public PipeCommand(List<List<String>> content) { super(content); }
+    }
+
+    public static class SingleCommand extends Command<List<String>> {
+        public SingleCommand(List<String> content, String input, String output) { super(content); }
     }
 
     public static class AndAndCommand extends Command<List<List<String>>> {
@@ -54,7 +54,7 @@ TOKEN: {
 void Command():
 {}
 {
-    SimpleCommand() | ShellCommand()
+    SimpleCommand() | SubShell()
     <EOF>
 }
 
@@ -75,7 +75,6 @@ KashParser.SimpleCommand SimpleCommand():
         }
      }
     )*
-    <EOF>
     {
         return new KashParser.SimpleCommand(words, input, output);
     }
@@ -100,16 +99,18 @@ void SubShell():
     "(" CompoundList() ")"
 }
 
-void CompoundList():
-{}
+KashParser.PipeCommand CompoundList():
 {
-    SimpleCommand() ("|" SimpleCommand())*
+    KashParser.SimpleCommand c = null;
+    List<List<String>> commands = new ArrayList<List<String>>();
 }
-
-void ShellCommand():
-{}
 {
-    SubShell()
+    c = SimpleCommand() { commands.add(c.words); }
+        ("|" c = SimpleCommand() { commands.add(c.words); })*
+
+    {
+        return new KashParser.PipeCommand(commands);
+    }
 }
 
 Command Goal3():

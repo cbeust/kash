@@ -30,6 +30,22 @@ class Parser3Test {
     }
 
     @DataProvider
+    fun pipeCommandDp() = arrayOf(
+        arrayOf("( ls )", KashParser.PipeCommand(listOf(listOf("ls")))),
+        arrayOf("( ls | wc)", KashParser.PipeCommand(listOf(listOf("ls"), listOf("wc"))))
+    )
+
+    @Test(dataProvider = "pipeCommandDp")
+    fun pipeCommand(line: String, command: KashParser.PipeCommand) {
+        val sc = KashParser(StringReader(line))
+        val goal = sc.SubShell()
+        println(goal)
+//        assertThat(goal.words).isEqualTo(command.words);
+//        assertThat(goal.input).isEqualTo(command.input);
+//        assertThat(goal.output).isEqualTo(command.output);
+    }
+
+    @DataProvider
     fun multiCommandDp() = arrayOf(
             arrayOf("ls -l | wc -l", KashParser.PipeCommand(listOf(listOf("ls", "-l"), listOf("wc", "-l")))),
             arrayOf("ls -l && echo a", KashParser.PipeCommand(listOf(listOf("ls", "-l"), listOf("echo", "a"))))
