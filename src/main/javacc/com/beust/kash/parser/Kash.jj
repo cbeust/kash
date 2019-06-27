@@ -11,6 +11,10 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class KashParser {
+    private static boolean eq(Object a, Object b) {
+        return (a == null && b == null) || (a != null && a.equals(b));
+    }
+
     public static class RedirectionNode {
         public final String symbol;
         public final String destination;
@@ -23,11 +27,22 @@ public class KashParser {
     }
 
     public static class SimpleCommand {
-        public final List<String> words;
+        public final List<String> content;
         public final String input;
         public final String output;
-        public SimpleCommand(List<String> words, String input, String output) {
-            this.words = words; this.input = input; this.output = output;
+        public final String before;
+        public SimpleCommand(List<String> content, String input, String output, String before) {
+            this.content = content; this.input = input; this.output = output; this.before = before;
+        }
+        public SimpleCommand(List<String> content, String input, String output) {
+            this(content, input, output, null);
+        }
+        @Override public boolean equals(Object other) {
+            SimpleCommand sc = (SimpleCommand) other;
+            return content.equals((sc.content)) &&
+                eq(input, sc.input) &&
+                eq(output, sc.output) &&
+                eq(before, sc.before);
         }
     }
 
@@ -125,7 +140,7 @@ CompoundList CompoundList():
 }
 {
     c = SimpleCommand() { commands.add(c); }
-        ("|" c = SimpleCommand() { commands.add(c); })*
+        ("|" c = SimpleCommand() { commands.add(new SimpleCommand(c.content, c.input, c.output, "|")); })*
 
     {
         return new KashParser.CompoundList(commands);

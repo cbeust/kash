@@ -24,23 +24,26 @@ class Parser3Test {
         val sc = KashParser(StringReader(line))
         val goal = sc.SimpleCommand()
         println(goal)
-        assertThat(goal.words).isEqualTo(expected.words);
+        assertThat(goal.content).isEqualTo(expected.content);
         assertThat(goal.input).isEqualTo(expected.input);
         assertThat(goal.output).isEqualTo(expected.output);
     }
 
     @DataProvider
-    fun pipeCommandDp() = arrayOf(
-        arrayOf("( ls )", KashParser.PipeCommand(listOf(listOf("ls")))),
-        arrayOf("( ls | wc)", KashParser.PipeCommand(listOf(listOf("ls"), listOf("wc")))),
-        arrayOf("( ls -l > a.txt| wc)", KashParser.PipeCommand(listOf(listOf("ls", "-l"), listOf("wc"))))
+    fun subShellDp() = arrayOf(
+        arrayOf("( ls )", KashParser.SubShell(KashParser.CompoundList(
+                listOf(KashParser.SimpleCommand(listOf("ls"), null, null)))))
+//        arrayOf("( ls | wc)", KashParser.SubShell(KashParser.CompoundList(listOf(
+//
+//                KashParser.PipeCommand(listOf(listOf("ls"), listOf("wc"))))))),
+//        arrayOf("( ls -l > a.txt| wc)", KashParser.PipeCommand(listOf(listOf("ls", "-l"), listOf("wc"))))
     )
 
-    @Test(dataProvider = "pipeCommandDp")
-    fun pipeCommand(line: String, expected: KashParser.PipeCommand) {
+    @Test(dataProvider = "subShellDp")
+    fun subShell(line: String, expected: KashParser.SubShell) {
         val sc = KashParser(StringReader(line))
         val goal = sc.SubShell()
-        assertThat(goal.command.content).isEqualTo(expected.content);
+        assertThat(goal.command.content).isEqualTo(expected.command.content);
     }
 
     @DataProvider
