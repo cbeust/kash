@@ -44,6 +44,8 @@
                 |  '>|' <word>
                 |  <number> '>|' <word>
 
+<simple_command> ::=  (<simple_command_element>)*
+
 <simple_command_element> ::= <word>
                           |  <assignment_word>
                           |  <redirection>
@@ -51,8 +53,6 @@
 <redirection_list> ::= <redirection>
                     |  <redirection_list> <redirection>
 
-<simple_command> ::=  <simple_command_element>
-                   |  <simple_command> <simple_command_element>
 
 <command> ::=  <simple_command>
             |  <shell_command>

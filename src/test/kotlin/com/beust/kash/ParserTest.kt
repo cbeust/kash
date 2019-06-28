@@ -46,18 +46,8 @@ class Parser3Test {
         assertThat(goal.command.content).isEqualTo(expected.command.content);
     }
 
-    @DataProvider
-    fun multiCommandDp() = arrayOf(
-            arrayOf("ls -l | wc -l", KashParser.PipeCommand(listOf(listOf("ls", "-l"), listOf("wc", "-l")))),
-            arrayOf("ls -l && echo a", KashParser.PipeCommand(listOf(listOf("ls", "-l"), listOf("echo", "a"))))
-    )
+//    fun command(args: List<String>) = KashParser.Command(KashParser.SimpleCommand(args, null, null, null), null)
 
-    @Test(dataProvider = "multiCommandDp")
-    fun multiCommand(line: String, command: KashParser.Command<List<List<String>>>) {
-        val sc = KashParser(StringReader(line))
-        val goal = sc.Goal2()
-        assertThat(goal.content).isEqualTo(command.content)
-    }
 }
 
 @Test
@@ -68,31 +58,31 @@ class ParserTest {
     private fun andAnd() = Token.AndAnd()
     private fun and() = Token.And()
 
-    @DataProvider
-    fun singleCommandDp() = arrayOf(
-            arrayOf("ls -l", KashParser.SingleCommand(listOf("ls", "-l"), null, null))
-    )
+//    @DataProvider
+//    fun singleCommandDp() = arrayOf(
+//            arrayOf("ls -l", KashParser.SingleCommand(listOf("ls", "-l"), null, null))
+//    )
+//
+//    @Test(dataProvider = "singleCommandDp")
+//    fun singleCommand(line: String, command: KashParser.Command<List<String>>) {
+//        val sc = KashParser(StringReader(line))
+//        val goal = sc.Goal2()
+//        assertThat(goal.content).isEqualTo(command.content)
+//
+//    }
 
-    @Test(dataProvider = "singleCommandDp")
-    fun singleCommand(line: String, command: KashParser.Command<List<String>>) {
-        val sc = KashParser(StringReader(line))
-        val goal = sc.Goal2()
-        assertThat(goal.content).isEqualTo(command.content)
-
-    }
-
-    @DataProvider
-    fun multiCommandDp() = arrayOf(
-            arrayOf("ls -l | wc -l", KashParser.PipeCommand(listOf(listOf("ls", "-l"), listOf("wc", "-l")))),
-            arrayOf("ls -l && echo a", KashParser.PipeCommand(listOf(listOf("ls", "-l"), listOf("echo", "a"))))
-    )
-
-    @Test(dataProvider = "multiCommandDp")
-    fun multiCommand(line: String, command: KashParser.Command<List<List<String>>>) {
-        val sc = KashParser(StringReader(line))
-        val goal = sc.Goal2()
-        assertThat(goal.content).isEqualTo(command.content)
-    }
+//    @DataProvider
+//    fun multiCommandDp() = arrayOf(
+//            arrayOf("ls -l | wc -l", KashParser.PipeCommand(listOf(listOf("ls", "-l"), listOf("wc", "-l")))),
+//            arrayOf("ls -l && echo a", KashParser.PipeCommand(listOf(listOf("ls", "-l"), listOf("echo", "a"))))
+//    )
+//
+//    @Test(dataProvider = "multiCommandDp")
+//    fun multiCommand(line: String, command: KashParser.Command<List<List<String>>>) {
+//        val sc = KashParser(StringReader(line))
+//        val goal = sc.Goal2()
+//        assertThat(goal.content).isEqualTo(command.content)
+//    }
 
     @DataProvider
     fun lexicalDp2() = arrayOf(

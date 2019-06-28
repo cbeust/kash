@@ -1,4 +1,4 @@
-    options {
+options {
     STATIC = false ;
     DEBUG_PARSER = false;
 }
@@ -21,9 +21,17 @@ public class KashParser {
         RedirectionNode(String symbol, String destination) { this.symbol = symbol; this.destination = destination; }
     }
 
-    public static class Command<T> {
+    public static class AbstractCommand<T> {
         public final T content;
-        public Command(T content) { this.content = content; }
+        public AbstractCommand(T content) { this.content = content; }
+    }
+
+    public static class Command {
+        public final SimpleCommand simpleCommand;
+        public final SubShell subShell;
+        public Command(SimpleCommand sc, SubShell ss) {
+            this.simpleCommand = sc; this.subShell = ss;
+        }
     }
 
     public static class SimpleCommand {
@@ -46,14 +54,13 @@ public class KashParser {
         }
     }
 
-    public static class CompoundList extends Command<List<SimpleCommand>> {
+    public static class CompoundList extends AbstractCommand<List<SimpleCommand>> {
         public CompoundList(List<SimpleCommand> content) { super(content); }
     }
 
-    public static class PipeCommand extends Command<List<List<String>>> {
-        public PipeCommand(List<List<String>> content) { super(content); }
+    public static class PipeCommand extends AbstractCommand<List<Command>> {
+        public PipeCommand(List<Command> content) { super(content); }
     }
-
 
     public static class SubShell {
         public final KashParser.CompoundList command;
@@ -63,13 +70,13 @@ public class KashParser {
     }
 
 
-    public static class SingleCommand extends Command<List<String>> {
+    public static class SingleCommand extends AbstractCommand<List<String>> {
         public SingleCommand(List<String> content, String input, String output) { super(content); }
     }
 
-    public static class AndAndCommand extends Command<List<List<String>>> {
-        public AndAndCommand(List<List<String>> content) { super(content); }
-    }
+//    public static class AndAndCommand {
+//        public AndAndCommand(List<List<String>> content) { super(content); }
+//    }
 }
 
 PARSER_END(KashParser)
@@ -80,11 +87,20 @@ TOKEN: {
     | <WORD: (["-", ".", "a"-"z", "A"-"Z"]) +>
      }
 
-void Command():
-{}
+Command Command():
 {
-    SimpleCommand() | SubShell()
+    SimpleCommand sc;
+    SubShell ss;
+    Command result;
+}
+{
+    ( sc = SimpleCommand() { result = new Command(sc, null); })
+    |
+    ss = SubShell() { result = new Command(null, ss); }
     <EOF>
+    {
+    return result;
+    }
 }
 
 KashParser.SimpleCommand SimpleCommand():
@@ -117,7 +133,6 @@ RedirectionNode Redirection():
 {
     (c = ">" t = <WORD> | c = "<" t = <WORD>)
     {
-        System.out.println("Redirection: " + t.image);
         return new KashParser.RedirectionNode(c.image, t.image);
     }
 }
@@ -140,102 +155,22 @@ CompoundList CompoundList():
 }
 {
     c = SimpleCommand() { commands.add(c); }
-        ("|" c = SimpleCommand() { commands.add(new SimpleCommand(c.content, c.input, c.output, "|")); })*
-
+        ("&&" c = SimpleCommand() { commands.add(new SimpleCommand(c.content, c.input, c.output, "&&")); })*
     {
         return new KashParser.CompoundList(commands);
     }
 }
 
-Command Goal3():
+PipeCommand PipeCommand():
 {
-    Token word;
-    Token output = null;
-    Token input = null;
-    Token err = null;
-    List<String> singleCommandWords = new ArrayList<String>();
-    List<String> words = new ArrayList<String>();
-
-    boolean isPipe = false;
-    boolean isAndAnd = false;
-    List<List<String>> allWords = new ArrayList<List<String>>();
+    Command c;
+    List<Command> commands = new ArrayList<Command>();
 }
 {
-    (
-        word = <WORD> (<GT> output = <WORD>)* (<LT> input = <WORD>)* (<PIPE> { isPipe = true; })?
-        {
-            words.add(word.image);
-            if (isPipe) {
-                allWords.add(new ArrayList(words));
-                words.clear();
-            } else {
-                singleCommandWords.add(word.image);
-            }
-        }
-    ) +
-
-    <EOF>
-
+    c = Command() { commands.add(c); }
+        ("|" c = Command() { commands.add(c); })*
     {
-        if (singleCommandWords.size() > 0) {
-            return new SingleCommand(singleCommandWords,
-                output != null ? output.image : null,
-                input != null ? input.image : null) ;
-        } else if (isPipe) {
-            allWords.add(words);
-            return new PipeCommand(allWords);
-        } else {
-            return null;
-        }
+        return new PipeCommand(commands);
     }
-}
 
-
-Command Goal2():
-{
-    Token t;
-    Token r = null;
-    boolean isPipe = false;
-    boolean isAndAnd = false;
-    List<String> singleCommandWords = new ArrayList<String>();
-    List<String> words = new ArrayList<String>();
-    List<List<String>> allWords = new ArrayList<List<String>>();
-}
-{
-    (
-        (t = <WORD>
-            {
-                System.out.println("ADDING 1 " + t.image);
-                singleCommandWords.add(t.image);
-                words.add(t.image);
-            })+
-            {
-                System.out.println("ALLWORDS 1: " + words);
-                allWords.add(new ArrayList(words));
-                words.clear();
-            }
-
-        ( <GT> r = <WORD> { singleCommandWords.add(">"); singleCommandWords.add(r.image); } )*
-
-        ( (<PIPE> { isPipe = true; } | <ANDAND> { isAndAnd = true; }) ((t = <WORD>
-            {
-               System.out.println("ADDING 2 " + t.image);
-               words.add(t.image);
-            }
-            )+
-            )
-             {
-                System.out.println("ALLWORDS 2: " + words);
-                allWords.add(new ArrayList(words));
-                words.clear();
-             }
-              )*
-    )
-     <EOF>
-     {
-        System.out.println("Returning command " + words + " " + allWords);
-        if (isPipe) return new PipeCommand(allWords);
-        else if (isAndAnd) return new AndAndCommand(allWords);
-        else return new SingleCommand(singleCommandWords, null, null);
-     }
 }

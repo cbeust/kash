@@ -12,8 +12,8 @@ fun main() {
             "ls c && echo a"
     ).forEach {
         val sc = KashParser(StringReader(it))
-        val goal = sc.Goal2()
-        println(goal)
+//        val goal = sc.Goal2()
+//        println(goal)
     }
 }
 
