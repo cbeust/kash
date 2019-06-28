@@ -56,6 +56,10 @@ public class KashParser {
 
     public static class CompoundList extends AbstractCommand<List<SimpleCommand>> {
         public CompoundList(List<SimpleCommand> content) { super(content); }
+        @Override public boolean equals(Object other) {
+            CompoundList cl = (CompoundList) other;
+            return this.content.equals(cl.content);
+        }
     }
 
     public static class PipeCommand extends AbstractCommand<List<Command>> {
@@ -66,6 +70,10 @@ public class KashParser {
         public final KashParser.CompoundList command;
         public SubShell(KashParser.CompoundList command) {
             this.command = command;
+        }
+        @Override public boolean equals(Object other) {
+            SubShell ss = (SubShell) other;
+            return command.equals(ss.command);
         }
     }
 
@@ -94,10 +102,12 @@ Command Command():
     Command result;
 }
 {
+    (
     ( sc = SimpleCommand() { result = new Command(sc, null); })
     |
     ss = SubShell() { result = new Command(null, ss); }
     <EOF>
+    )
     {
     return result;
     }
