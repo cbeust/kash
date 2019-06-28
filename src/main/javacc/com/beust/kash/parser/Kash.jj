@@ -62,8 +62,8 @@ public class KashParser {
         }
     }
 
-    public static class PipeCommand extends AbstractCommand<List<Command>> {
-        public PipeCommand(List<Command> content) { super(content); }
+    public static class PipeLineCommand extends AbstractCommand<List<Command>> {
+        public PipeLineCommand(List<Command> content) { super(content); }
     }
 
     public static class SubShell {
@@ -82,6 +82,14 @@ public class KashParser {
         public SingleCommand(List<String> content, String input, String output) { super(content); }
     }
 
+    public static class SimpleList extends AbstractCommand<List<PipeLineCommand>> {
+        public final boolean ampersand;
+        public SimpleList(List<PipeLineCommand> pipelines, boolean ampersand) {
+            super(pipelines);
+            this.ampersand = ampersand;
+        }
+    }
+
 //    public static class AndAndCommand {
 //        public AndAndCommand(List<List<String>> content) { super(content); }
 //    }
@@ -94,6 +102,58 @@ TOKEN: {
     "(" | ")" | <GT: ">"> | <LT: "<"> | <ANDAND: "&&"> | <PIPE: "|"> | <NUM: (["0"-"9"])+>
     | <WORD: (["-", ".", "a"-"z", "A"-"Z"]) +>
      }
+
+SimpleList SimpleList():
+{
+    List<PipeLineCommand> cs;
+    boolean ampersand = false;
+    SimpleList result;
+}
+{
+    (cs = SimpleList1()) ("&" { ampersand = true; })?
+    {
+        return new SimpleList(cs, ampersand);
+    }
+}
+
+List<PipeLineCommand> SimpleList1():
+{
+    PipeLineCommand c;
+    List<PipeLineCommand> cs;
+    List<PipeLineCommand> result = new ArrayList<PipeLineCommand>();
+}
+{
+    c = PipeLineCommand() { result.add(c); }
+        ("&&" cs = SimpleList1() { result.addAll(cs); })*
+
+    {
+        return result;
+    }
+
+}
+
+
+KashParser.SimpleCommand SimpleCommand():
+{
+    RedirectionNode redir = null;
+    Token w = null;
+    String input = null;
+    String output = null;
+    List<String> words = new ArrayList<String>();
+}
+{
+    (w = <WORD> { words.add(w.image); })+
+    (redir = Redirection() {
+        switch(redir.symbol) {
+            case(">"): output = redir.destination; break;
+            case("<"): input= redir.destination; break;
+        }
+     }
+    )*
+    {
+        return new KashParser.SimpleCommand(words, input, output);
+    }
+}
 
 Command Command():
 {
@@ -110,28 +170,6 @@ Command Command():
     )
     {
     return result;
-    }
-}
-
-KashParser.SimpleCommand SimpleCommand():
-{
-    RedirectionNode redir = null;
-    Token w = null;
-    String input = null;
-    String output = null;
-    List<String> words = new ArrayList<String>();
-}
-{
-    ((w = <WORD> { words.add(w.image); })+)
-    (redir = Redirection() {
-        switch(redir.symbol) {
-            case(">"): output = redir.destination; break;
-            case("<"): input= redir.destination; break;
-        }
-     }
-    )*
-    {
-        return new KashParser.SimpleCommand(words, input, output);
     }
 }
 
@@ -164,14 +202,15 @@ CompoundList CompoundList():
     List<SimpleCommand> commands = new ArrayList<SimpleCommand>();
 }
 {
-    c = SimpleCommand() { commands.add(c); }
+    (c = SimpleCommand() { commands.add(c); }
         ("&&" c = SimpleCommand() { commands.add(new SimpleCommand(c.content, c.input, c.output, "&&")); })*
+    )
     {
         return new KashParser.CompoundList(commands);
     }
 }
 
-PipeCommand PipeCommand():
+PipeLineCommand PipeLineCommand():
 {
     Command c;
     List<Command> commands = new ArrayList<Command>();
@@ -180,7 +219,7 @@ PipeCommand PipeCommand():
     c = Command() { commands.add(c); }
         ("|" c = Command() { commands.add(c); })*
     {
-        return new PipeCommand(commands);
+        return new PipeLineCommand(commands);
     }
 
 }
