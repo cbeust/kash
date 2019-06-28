@@ -68,20 +68,23 @@ class Parser3Test {
             assertThat(goal.subShell).isEqualTo(expected)
         }
     }
-//    fun command(args: List<String>) = KashParser.Command(KashParser.SimpleCommand(args, null, null, null), null)
+
+    private fun command(args: List<String>) = KashParser.Command(KashParser.SimpleCommand(args, null, null, null), null)
 
     @DataProvider
     fun simpleListDp(): Array<Array<Any>> {
         val sc = simpleCommand("ls", "-l")
         return arrayOf(
-                arrayOf("ls -l && echo", simpleCommand("ls", "-l", output = "a.txt")))
+                arrayOf("ls -l && echo", simpleCommand("ls", "-l"))
+        )
     }
 
     @Test(dataProvider = "simpleListDp")
     fun simpleList(line: String, expected: Any) {
         val parser = KashParser(StringReader(line))
-        val goal = parser.SimpleList()
-        println(goal)
+        val result = parser.SimpleList()
+        assertThat(result.content[0]).isEqualTo(KashParser.PipeLineCommand(listOf(command(listOf("ls", "-l"))), null))
+        assertThat(result.content[1]).isEqualTo(KashParser.PipeLineCommand(listOf(command(listOf("echo"))), "&&"))
     }
 }
 

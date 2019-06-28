@@ -32,6 +32,10 @@ public class KashParser {
         public Command(SimpleCommand sc, SubShell ss) {
             this.simpleCommand = sc; this.subShell = ss;
         }
+        @Override public boolean equals(Object other) {
+            Command c = (Command) other;
+            return simpleCommand.equals(c.simpleCommand) && subShell == c.subShell;
+        }
     }
 
     public static class SimpleCommand {
@@ -63,7 +67,15 @@ public class KashParser {
     }
 
     public static class PipeLineCommand extends AbstractCommand<List<Command>> {
-        public PipeLineCommand(List<Command> content) { super(content); }
+        public final String precededBy;
+        public PipeLineCommand(List<Command> content, String precededBy) {
+            super(content);
+            this.precededBy = precededBy;
+        }
+        @Override public boolean equals(Object other) {
+            PipeLineCommand cl = (PipeLineCommand) other;
+            return eq(precededBy, cl.precededBy) && content.equals(cl.content);
+        }
     }
 
     public static class SubShell {
@@ -78,10 +90,10 @@ public class KashParser {
     }
 
 
-    public static class SingleCommand extends AbstractCommand<List<String>> {
-        public SingleCommand(List<String> content, String input, String output) { super(content); }
-    }
-
+//    public static class SingleCommand extends AbstractCommand<List<String>> {
+//        public SingleCommand(List<String> content, String input, String output) { super(content); }
+//    }
+//
     public static class SimpleList extends AbstractCommand<List<PipeLineCommand>> {
         public final boolean ampersand;
         public SimpleList(List<PipeLineCommand> pipelines, boolean ampersand) {
@@ -124,7 +136,12 @@ List<PipeLineCommand> SimpleList1():
 }
 {
     c = PipeLineCommand() { result.add(c); }
-        ("&&" cs = SimpleList1() { result.addAll(cs); })*
+        ("&&" cs = SimpleList1()
+        {
+            for (PipeLineCommand pc: cs) {
+                result.add(new PipeLineCommand(pc.content, "&&"));
+            }
+        })*
 
     {
         return result;
@@ -219,7 +236,7 @@ PipeLineCommand PipeLineCommand():
     c = Command() { commands.add(c); }
         ("|" c = Command() { commands.add(c); })*
     {
-        return new PipeLineCommand(commands);
+        return new PipeLineCommand(commands, null);
     }
 
 }
