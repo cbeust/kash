@@ -1,5 +1,5 @@
 options {
-    STATIC = false ;
+    STATIC = false;
     DEBUG_PARSER = false;
 }
 
@@ -115,6 +115,21 @@ TOKEN: {
     | <WORD: (["-", ".", "a"-"z", "A"-"Z"]) +>
      }
 
+CompoundList CompoundList():
+{
+    KashParser.SimpleCommand c = null;
+    List<SimpleCommand> commands = new ArrayList<SimpleCommand>();
+}
+{
+    (c = SimpleCommand() { commands.add(c); }
+        ("&&" c = SimpleCommand() { commands.add(new SimpleCommand(c.content, c.input, c.output, "&&")); })*
+    )
+    <EOF>
+    {
+        return new KashParser.CompoundList(commands);
+    }
+}
+
 SimpleList SimpleList():
 {
     List<PipeLineCommand> cs;
@@ -210,20 +225,6 @@ KashParser.SubShell SubShell():
     "(" result = CompoundList() ")"
     {
         return new SubShell(result);
-    }
-}
-
-CompoundList CompoundList():
-{
-    KashParser.SimpleCommand c = null;
-    List<SimpleCommand> commands = new ArrayList<SimpleCommand>();
-}
-{
-    (c = SimpleCommand() { commands.add(c); }
-        ("&&" c = SimpleCommand() { commands.add(new SimpleCommand(c.content, c.input, c.output, "&&")); })*
-    )
-    {
-        return new KashParser.CompoundList(commands);
     }
 }
 

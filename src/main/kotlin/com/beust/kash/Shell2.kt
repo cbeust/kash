@@ -1,5 +1,6 @@
 package com.beust.kash
 
+import com.beust.kash.parser.KashParser
 import com.google.inject.Inject
 import com.google.inject.Singleton
 import org.jline.reader.LineReader
@@ -9,6 +10,7 @@ import org.jline.terminal.Terminal
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileReader
+import java.io.StringReader
 import java.nio.file.Paths
 import java.util.*
 
@@ -95,6 +97,30 @@ class Shell2 @Inject constructor(terminal: Terminal,
     }
 
     override fun runLine(line: String, inheritIo: Boolean): CommandResult {
+//        return newParser(line, inheritIo)
+        return oldParser (line, inheritIo)
+    }
+
+    private fun newParser(line: String, inheritIo: Boolean): CommandResult {
+        val parser = KashParser(StringReader(line))
+        val result =
+            try {
+                val goal = parser.CompoundList()
+                println(goal)
+                CommandResult(0)
+            } catch(ex: Exception) {
+                log.debug("Detected Kotlin")
+                try {
+                    val er = engine.eval(line)
+                    CommandResult(0, er?.toString(), null)
+                } catch(ex: Exception) {
+                    CommandResult(1, null, ex.message)
+                }
+            }
+        return result
+    }
+
+    fun oldParser(line: String, inheritIo: Boolean): CommandResult {
         val commands = Parser(::tokenTransformer).parse(line)
 
         fun logCommand(command: Command, type: String) = log.debug("Type($type), Exec:$command")
@@ -138,8 +164,10 @@ class Shell2 @Inject constructor(terminal: Terminal,
                 val cr = runLine(p.substring(1, p.length - 1), inheritIo = false)
                 if (cr.returnCode == 0 && cr.stdout != null) {
                     cr.stdout
-                } else {
+                } else if (cr.returnCode != 0) {
                     "Error running command $p: '${cr.stderr!!}  "
+                } else {
+                    ""
                 }
             } else {
                 p
