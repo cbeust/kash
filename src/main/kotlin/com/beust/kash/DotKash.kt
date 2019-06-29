@@ -7,7 +7,7 @@ import java.io.File
 /**
  * Read ~/.kash.json
  */
-object DotKashReader {
+object DotKashJsonReader {
     private val DOT_KASH = File(System.getProperty("user.home"), ".kash.json")
     var dotKash: DotKash? = null
 

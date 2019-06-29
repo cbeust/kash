@@ -29,7 +29,8 @@ class Shell2 @Inject constructor(terminal: Terminal,
 
     private val log = LoggerFactory.getLogger(Shell2::class.java)
 
-    private val DOT_KASH = File(System.getProperty("user.home"), ".kash.json")
+    private val DOT_KASH_JSON = File(System.getProperty("user.home"), ".kash.json")
+    private val DOT_KASH_KTS = File(System.getProperty("user.home"), ".kash.kts")
     private val KASH_STRINGS = listOf("Kash.ENV", "Kash.PATHS", "Kash.PROMPT", "Kash.DIRS")
 
     private val reader: LineReader
@@ -38,6 +39,18 @@ class Shell2 @Inject constructor(terminal: Terminal,
     private val commandRunner: CommandRunner
 
     init {
+        //
+        // Read ~/.kash.kts
+        //
+        if (DOT_KASH_KTS.exists()) {
+            try {
+                engine.eval(FileReader(DOT_KASH_KTS))
+                log.debug("Read $DOT_KASH_KTS")
+            } catch(ex: Exception) {
+                System.err.println("Errors found while reading $DOT_KASH_KTS: " + ex.message)
+            }
+        }
+
         //
         // Configure the line reader with the tab completers
         //
@@ -50,25 +63,6 @@ class Shell2 @Inject constructor(terminal: Terminal,
         directoryStack.push(File(".").absoluteFile.canonicalPath)
         commandFinder = CommandFinder(listOf(builtinFinder, scriptFinder, executableFinder))
         commandRunner = CommandRunner(builtins, engine, commandFinder, context)
-
-        //
-        // Read ~/.kash.kts
-        //
-        if (DOT_KASH.exists()) {
-            try {
-                engine.eval(FileReader(DOT_KASH))
-                log.debug("Read $DOT_KASH")
-            } catch(ex: Exception) {
-                System.err.println("Errors found while reading $DOT_KASH: " + ex.message)
-            }
-        }
-
-        //
-        // Read ~/.kash.json
-        //
-        DotKashReader.dotKash?.scriptPath?.let {
-            context.scriptPath.addAll(it)
-        }
 
         // Copy the path
         //
@@ -98,16 +92,39 @@ class Shell2 @Inject constructor(terminal: Terminal,
 
     override fun runLine(line: String, inheritIo: Boolean): CommandResult {
 //        return newParser(line, inheritIo)
-        return oldParser (line, inheritIo)
+        return oldParser(line, inheritIo)
     }
 
     private fun newParser(line: String, inheritIo: Boolean): CommandResult {
         val parser = KashParser(StringReader(line))
-        val result =
+        var result =
             try {
-                val goal = parser.CompoundList()
-                println(goal)
+                val commands = parser.SimpleList()
+                commands.content.forEach { plCommand ->
+                    val command = plCommand.content[0]
+                    val simpleCommand = command.simpleCommand
+                    if (simpleCommand != null) {
+                        val firstWord = simpleCommand.content[0]
+                        val commandSearchResult = commandFinder.findCommand(firstWord)
+                        println(plCommand)
+                    } else {
+                        println("subshell")
+                    }
+
+                }
                 CommandResult(0)
+//                commands.content.forEach { command ->
+//                    val firstWord = command.content[0]
+//                    val commandSearchResult = commandFinder.findCommand(firstWord)
+//                    result =
+//                        if (commandSearchResult != null) {
+//                            log.debug("Detected command")
+////                            logCommand(command, commandSearchResult.type.name)
+//                            commandRunner.runLine(line, command, commandSearchResult, inheritIo)
+//                        } else {
+//                            CommandResult(1)
+//                        }
+//                }
             } catch(ex: Exception) {
                 log.debug("Detected Kotlin")
                 try {

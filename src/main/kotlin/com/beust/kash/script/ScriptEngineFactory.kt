@@ -5,7 +5,7 @@
 
 package com.beust.kash.script
 
-import com.beust.kash.DotKashReader
+import com.beust.kash.DotKashJsonReader
 import org.jetbrains.kotlin.cli.common.repl.KotlinJsr223JvmScriptEngineFactoryBase
 import java.io.File
 import javax.script.ScriptEngine
@@ -30,7 +30,7 @@ class ScriptEngineFactory : KotlinJsr223JvmScriptEngineFactoryBase() {
         //
         // Read ~/.kash.json, configure the classpath of the script engine
         //
-        val userClasspath = DotKashReader.dotKash?.classPath?.map { File(it) } ?: emptyList()
+        val userClasspath = DotKashJsonReader.dotKash?.classPath?.map { File(it) } ?: emptyList()
 
         val currentClassLoader = Thread.currentThread().contextClassLoader
         val classPath =
