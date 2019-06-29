@@ -95,44 +95,42 @@ class Shell2 @Inject constructor(terminal: Terminal,
         return oldParser(line, inheritIo)
     }
 
+    private fun runKotlin(line: String): CommandResult {
+        log.debug("Detected Kotlin")
+        return try {
+            val er = engine.eval(line)
+            CommandResult(0, er?.toString(), null)
+        } catch(ex: Exception) {
+            CommandResult(1, null, ex.message)
+        }
+    }
+
     private fun newParser(line: String, inheritIo: Boolean): CommandResult {
         val parser = KashParser(StringReader(line))
-        var result =
+        var commands: KashParser.SimpleList? = null
+        var commandSearchResult: CommandFinder.CommandSearchResult? = null
+        val result =
             try {
-                val commands = parser.SimpleList()
+                commands = parser.SimpleList()
+                var localResult = CommandResult(1)
                 commands.content.forEach { plCommand ->
                     val command = plCommand.content[0]
                     val simpleCommand = command.simpleCommand
                     if (simpleCommand != null) {
                         val firstWord = simpleCommand.content[0]
-                        val commandSearchResult = commandFinder.findCommand(firstWord)
-                        println(plCommand)
+                        commandSearchResult = commandFinder.findCommand(firstWord)
+                        if (commandSearchResult == null) {
+                            localResult = runKotlin(line)
+                        } else {
+                            println("Running command $plCommand")
+                        }
                     } else {
                         println("subshell")
                     }
-
                 }
-                CommandResult(0)
-//                commands.content.forEach { command ->
-//                    val firstWord = command.content[0]
-//                    val commandSearchResult = commandFinder.findCommand(firstWord)
-//                    result =
-//                        if (commandSearchResult != null) {
-//                            log.debug("Detected command")
-////                            logCommand(command, commandSearchResult.type.name)
-//                            commandRunner.runLine(line, command, commandSearchResult, inheritIo)
-//                        } else {
-//                            CommandResult(1)
-//                        }
-//                }
+                localResult
             } catch(ex: Exception) {
-                log.debug("Detected Kotlin")
-                try {
-                    val er = engine.eval(line)
-                    CommandResult(0, er?.toString(), null)
-                } catch(ex: Exception) {
-                    CommandResult(1, null, ex.message)
-                }
+                runKotlin(line)
             }
         return result
     }
