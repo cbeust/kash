@@ -111,7 +111,6 @@ class Shell2 @Inject constructor(
         val result =
             try {
                 list = parser.SimpleList()
-                var localResult = CommandResult(1)
                 val plCommand = list.content[0]
                 val command = plCommand.content[0]
                 val simpleCommand = command.simpleCommand
