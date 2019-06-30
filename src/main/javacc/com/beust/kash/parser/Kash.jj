@@ -47,7 +47,6 @@ CompoundList CompoundList():
         ("||" c = SimpleCommand() { commands.add(new SimpleCommand(c.content, c.input, c.output, "||")); })*
         (";" c = SimpleCommand() { commands.add(new SimpleCommand(c.content, c.input, c.output, ";")); })*
     )
-    <EOF>
     {
         return new CompoundList(commands);
     }
@@ -64,6 +63,7 @@ SimpleList SimpleList():
     {
         return new SimpleList(cs, ampersand);
     }
+    <EOF>
 }
 
 List<PipeLineCommand> SimpleList1():
