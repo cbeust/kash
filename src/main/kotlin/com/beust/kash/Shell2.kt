@@ -37,6 +37,7 @@ class Shell2 @Inject constructor(terminal: Terminal,
     private val directoryStack: Stack<String> get() = engine.directoryStack
     private val commandFinder: CommandFinder
     private val commandRunner: CommandRunner
+    private val commandRunner2: CommandRunner2
 
     init {
         //
@@ -63,6 +64,7 @@ class Shell2 @Inject constructor(terminal: Terminal,
         directoryStack.push(File(".").absoluteFile.canonicalPath)
         commandFinder = CommandFinder(listOf(builtinFinder, scriptFinder, executableFinder))
         commandRunner = CommandRunner(builtins, engine, commandFinder, context)
+        commandRunner2 = CommandRunner2(builtins, engine, commandFinder, context)
 
         // Copy the path
         //
@@ -77,12 +79,7 @@ class Shell2 @Inject constructor(terminal: Terminal,
         while (line != null) {
             try {
                 val result = runLine(line, inheritIo = true)
-                if (result.stdout != null) {
-                    println(result.stdout)
-                }
-                if (result.stderr != null) {
-                    println(result.stderr)
-                }
+                result.display()
             } catch(ex: Exception) {
                 System.err.println(ex.message)
             }
@@ -107,28 +104,27 @@ class Shell2 @Inject constructor(terminal: Terminal,
 
     private fun newParser(line: String, inheritIo: Boolean): CommandResult {
         val parser = KashParser(StringReader(line))
-        var commands: KashParser.SimpleList? = null
+        var list: KashParser.SimpleList? = null
         var commandSearchResult: CommandFinder.CommandSearchResult? = null
         val result =
             try {
-                commands = parser.SimpleList()
+                list = parser.SimpleList()
                 var localResult = CommandResult(1)
-                commands.content.forEach { plCommand ->
-                    val command = plCommand.content[0]
-                    val simpleCommand = command.simpleCommand
-                    if (simpleCommand != null) {
-                        val firstWord = simpleCommand.content[0]
-                        commandSearchResult = commandFinder.findCommand(firstWord)
-                        if (commandSearchResult == null) {
-                            localResult = runKotlin(line)
-                        } else {
-                            println("Running command $plCommand")
-                        }
+                val plCommand = list.content[0]
+                val command = plCommand.content[0]
+                val simpleCommand = command.simpleCommand
+                if (simpleCommand != null) {
+                    val firstWord = simpleCommand.content[0]
+                    commandSearchResult = commandFinder.findCommand(firstWord)
+                    if (commandSearchResult == null) {
+                        runKotlin(line)
                     } else {
-                        println("subshell")
+                        commandRunner2.runLine(line, list, commandSearchResult, inheritIo)
                     }
+                } else {
+                    println("subshell")
+                    CommandResult(0)
                 }
-                localResult
             } catch(ex: Exception) {
                 runKotlin(line)
             }

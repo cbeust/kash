@@ -15,6 +15,17 @@ public class KashParser {
         return (a == null && b == null) || (a != null && a.equals(b));
     }
 
+    public static <T> String joinToString(List<T> list) {
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
+        for (T e: list) {
+            if (! first) result.append(",");
+            else first = false;
+            result.append(e);
+        }
+        return result.toString();
+    }
+
     public static class RedirectionNode {
         public final String symbol;
         public final String destination;
@@ -36,6 +47,10 @@ public class KashParser {
             Command c = (Command) other;
             return simpleCommand.equals(c.simpleCommand) && subShell == c.subShell;
         }
+        @Override public String toString() {
+            if (simpleCommand != null) return simpleCommand.toString();
+            else return subShell.toString();
+        }
     }
 
     public static class SimpleCommand {
@@ -55,6 +70,9 @@ public class KashParser {
                 eq(input, sc.input) &&
                 eq(output, sc.output) &&
                 eq(before, sc.before);
+        }
+        @Override public String toString() {
+            return "[SimpleCommand " + joinToString(content) + "]";
         }
     }
 
@@ -111,9 +129,10 @@ PARSER_END(KashParser)
 
 SKIP:  { " " | "\t" | "\n" | "\r"                    }
 TOKEN: {
-    "(" | ")" | <GT: ">"> | <LT: "<"> | <ANDAND: "&&"> | <PIPE: "|"> | <NUM: (["0"-"9"])+>
+    <NUM: (["0"-"9"])+>
+    | ";" | "&&" | "||"
     | <WORD: (["-", ".", "a"-"z", "A"-"Z"]) +>
-     }
+}
 
 CompoundList CompoundList():
 {
@@ -123,6 +142,8 @@ CompoundList CompoundList():
 {
     (c = SimpleCommand() { commands.add(c); }
         ("&&" c = SimpleCommand() { commands.add(new SimpleCommand(c.content, c.input, c.output, "&&")); })*
+        ("||" c = SimpleCommand() { commands.add(new SimpleCommand(c.content, c.input, c.output, "||")); })*
+        (";" c = SimpleCommand() { commands.add(new SimpleCommand(c.content, c.input, c.output, ";")); })*
     )
     <EOF>
     {
@@ -151,10 +172,19 @@ List<PipeLineCommand> SimpleList1():
 }
 {
     c = PipeLineCommand() { result.add(c); }
-        ("&&" cs = SimpleList1()
-        {
+        ("&&" cs = SimpleList1() {
             for (PipeLineCommand pc: cs) {
                 result.add(new PipeLineCommand(pc.content, "&&"));
+            }
+        })*
+        ("||" cs = SimpleList1() {
+            for (PipeLineCommand pc: cs) {
+                result.add(new PipeLineCommand(pc.content, "||"));
+            }
+        })*
+        (";" cs = SimpleList1() {
+            for (PipeLineCommand pc: cs) {
+                result.add(new PipeLineCommand(pc.content, ";"));
             }
         })*
 
