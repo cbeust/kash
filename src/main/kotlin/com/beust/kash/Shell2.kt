@@ -21,16 +21,17 @@ interface LineRunner {
 
 @Suppress("PrivatePropertyName")
 @Singleton
-class Shell2 @Inject constructor(terminal: Terminal,
-        private val engine: Engine, private val context: KashContext,
-        builtins: Builtins,
-        executableFinder: ExecutableFinder,
-        scriptFinder: ScriptFinder,
-        builtinFinder: BuiltinFinder) : LineRunner {
+class Shell2 @Inject constructor(
+        private val terminal: Terminal,
+        private val engine: Engine,
+        private val context: KashContext,
+        private val builtins: Builtins,
+        private val executableFinder: ExecutableFinder,
+        private val scriptFinder: ScriptFinder,
+        private val builtinFinder: BuiltinFinder) : LineRunner {
 
     private val log = LoggerFactory.getLogger(Shell2::class.java)
 
-    private val DOT_KASH_JSON = File(System.getProperty("user.home"), ".kash.json")
     private val DOT_KASH_KTS = File(System.getProperty("user.home"), ".kash.kts")
     private val KASH_STRINGS = listOf("Kash.ENV", "Kash.PATHS", "Kash.PROMPT", "Kash.DIRS")
 
@@ -123,8 +124,10 @@ class Shell2 @Inject constructor(terminal: Terminal,
                         commandRunner2.runLine(line, list, commandSearchResult, inheritIo)
                     }
                 } else {
-                    println("subshell")
-                    CommandResult(0)
+                    val shell2 = Shell2(terminal, engine, context, builtins, executableFinder, scriptFinder,
+                            builtinFinder)
+                    val newLine = line.substring(line.indexOf("(") + 1,line.lastIndexOf(")"))
+                    shell2.runLine(newLine, inheritIo)
                 }
             } catch(ex: Exception) {
                 runKotlin(line)

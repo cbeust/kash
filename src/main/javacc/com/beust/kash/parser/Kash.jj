@@ -29,11 +29,10 @@ public class KashParser {
 
 PARSER_END(KashParser)
 
-SKIP:  { " " | "\t" | "\n" | "\r"                    }
+SKIP:  { " " | "\t" | "\n" | "\r" }
 TOKEN: {
-    <NUM: (["0"-"9"])+>
-    | ";" | "&&" | "||"
-    | <WORD: (["-", ".", "a"-"z", "A"-"Z"]) +>
+    ";" | "&&" | "||"
+    | <WORD: (["-", ".", "a"-"z", "A"-"Z", "0"-"9"]) +>
 }
 
 CompoundList CompoundList():
