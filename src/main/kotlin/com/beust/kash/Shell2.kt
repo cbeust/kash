@@ -1,6 +1,7 @@
 package com.beust.kash
 
 import com.beust.kash.parser.KashParser
+import com.beust.kash.parser.SimpleList
 import com.google.inject.Inject
 import com.google.inject.Singleton
 import org.jline.reader.LineReader
@@ -104,7 +105,7 @@ class Shell2 @Inject constructor(terminal: Terminal,
 
     private fun newParser(line: String, inheritIo: Boolean): CommandResult {
         val parser = KashParser(StringReader(line))
-        var list: KashParser.SimpleList? = null
+        var list: SimpleList? = null
         var commandSearchResult: CommandFinder.CommandSearchResult? = null
         val result =
             try {

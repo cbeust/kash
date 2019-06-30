@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class KashParser {
-    private static boolean eq(Object a, Object b) {
+    public static boolean eq(Object a, Object b) {
         return (a == null && b == null) || (a != null && a.equals(b));
     }
 
@@ -25,104 +25,6 @@ public class KashParser {
         }
         return result.toString();
     }
-
-    public static class RedirectionNode {
-        public final String symbol;
-        public final String destination;
-        RedirectionNode(String symbol, String destination) { this.symbol = symbol; this.destination = destination; }
-    }
-
-    public static class AbstractCommand<T> {
-        public final T content;
-        public AbstractCommand(T content) { this.content = content; }
-    }
-
-    public static class Command {
-        public final SimpleCommand simpleCommand;
-        public final SubShell subShell;
-        public Command(SimpleCommand sc, SubShell ss) {
-            this.simpleCommand = sc; this.subShell = ss;
-        }
-        @Override public boolean equals(Object other) {
-            Command c = (Command) other;
-            return simpleCommand.equals(c.simpleCommand) && subShell == c.subShell;
-        }
-        @Override public String toString() {
-            if (simpleCommand != null) return simpleCommand.toString();
-            else return subShell.toString();
-        }
-    }
-
-    public static class SimpleCommand {
-        public final List<String> content;
-        public final String input;
-        public final String output;
-        public final String before;
-        public SimpleCommand(List<String> content, String input, String output, String before) {
-            this.content = content; this.input = input; this.output = output; this.before = before;
-        }
-        public SimpleCommand(List<String> content, String input, String output) {
-            this(content, input, output, null);
-        }
-        @Override public boolean equals(Object other) {
-            SimpleCommand sc = (SimpleCommand) other;
-            return content.equals((sc.content)) &&
-                eq(input, sc.input) &&
-                eq(output, sc.output) &&
-                eq(before, sc.before);
-        }
-        @Override public String toString() {
-            return "[SimpleCommand " + joinToString(content) + "]";
-        }
-    }
-
-    public static class CompoundList extends AbstractCommand<List<SimpleCommand>> {
-        public CompoundList(List<SimpleCommand> content) { super(content); }
-        @Override public boolean equals(Object other) {
-            CompoundList cl = (CompoundList) other;
-            return this.content.equals(cl.content);
-        }
-    }
-
-    public static class PipeLineCommand extends AbstractCommand<List<Command>> {
-        public final String precededBy;
-        public PipeLineCommand(List<Command> content, String precededBy) {
-            super(content);
-            this.precededBy = precededBy;
-        }
-        @Override public boolean equals(Object other) {
-            PipeLineCommand cl = (PipeLineCommand) other;
-            return eq(precededBy, cl.precededBy) && content.equals(cl.content);
-        }
-    }
-
-    public static class SubShell {
-        public final KashParser.CompoundList command;
-        public SubShell(KashParser.CompoundList command) {
-            this.command = command;
-        }
-        @Override public boolean equals(Object other) {
-            SubShell ss = (SubShell) other;
-            return command.equals(ss.command);
-        }
-    }
-
-
-//    public static class SingleCommand extends AbstractCommand<List<String>> {
-//        public SingleCommand(List<String> content, String input, String output) { super(content); }
-//    }
-//
-    public static class SimpleList extends AbstractCommand<List<PipeLineCommand>> {
-        public final boolean ampersand;
-        public SimpleList(List<PipeLineCommand> pipelines, boolean ampersand) {
-            super(pipelines);
-            this.ampersand = ampersand;
-        }
-    }
-
-//    public static class AndAndCommand {
-//        public AndAndCommand(List<List<String>> content) { super(content); }
-//    }
 }
 
 PARSER_END(KashParser)
@@ -136,7 +38,7 @@ TOKEN: {
 
 CompoundList CompoundList():
 {
-    KashParser.SimpleCommand c = null;
+    SimpleCommand c = null;
     List<SimpleCommand> commands = new ArrayList<SimpleCommand>();
 }
 {
@@ -147,7 +49,7 @@ CompoundList CompoundList():
     )
     <EOF>
     {
-        return new KashParser.CompoundList(commands);
+        return new CompoundList(commands);
     }
 }
 
@@ -195,7 +97,7 @@ List<PipeLineCommand> SimpleList1():
 }
 
 
-KashParser.SimpleCommand SimpleCommand():
+SimpleCommand SimpleCommand():
 {
     RedirectionNode redir = null;
     Token w = null;
@@ -213,7 +115,7 @@ KashParser.SimpleCommand SimpleCommand():
      }
     )*
     {
-        return new KashParser.SimpleCommand(words, input, output);
+        return new SimpleCommand(words, input, output);
     }
 }
 
@@ -243,11 +145,11 @@ RedirectionNode Redirection():
 {
     (c = ">" t = <WORD> | c = "<" t = <WORD>)
     {
-        return new KashParser.RedirectionNode(c.image, t.image);
+        return new RedirectionNode(c.image, t.image);
     }
 }
 
-KashParser.SubShell SubShell():
+SubShell SubShell():
 {
     CompoundList result = null;
 }

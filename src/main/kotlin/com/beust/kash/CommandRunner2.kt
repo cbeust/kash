@@ -1,21 +1,24 @@
 package com.beust.kash
 
-import com.beust.kash.parser.KashParser
+import com.beust.kash.parser.SimpleCommand
+import com.beust.kash.parser.SimpleList
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
         private val commandFinder: CommandFinder, private val context: KashContext) {
-    private val log = LoggerFactory.getLogger(CommandRunner::class.java)
+    private val log = LoggerFactory.getLogger(CommandRunner2::class.java)
 
-    fun runLine(line: String, command: KashParser.SimpleList?, commandSearchResult: CommandFinder.CommandSearchResult,
+    fun runLine(line: String, command: SimpleList?, commandSearchResult: CommandFinder.CommandSearchResult,
             inheritIo: Boolean): CommandResult {
 //        val firstWord = command.content[0]
 
         val result =
             if (commandSearchResult.type == CommandType.BUILT_IN) {
                 // Built-in command
-                println("BUILT IN COMMAND")
+                log.debug("BUILT IN COMMAND")
                 CommandResult(0)
 //                builtins.commands[firstWord]!!(command.content)
 //                    builtinCommand(command.words)
@@ -24,7 +27,7 @@ class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
 //                runCommand(command, inheritIo)
                 runCommand(command!!)
             } else if (commandSearchResult.type == CommandType.SCRIPT) {
-                println("SCRIPT")
+                log.debug("SCRIPT")
                 CommandResult(0)
 //                val result = engine.eval(FileReader(File(commandSearchResult.path)),
 //                        command.content.subList(1, command.content.size))
@@ -35,7 +38,7 @@ class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
         return result
     }
 
-    private fun runCommand(list: KashParser.SimpleList): CommandResult {
+    private fun runCommand(list: SimpleList): CommandResult {
         var result = CommandResult(0)
         list.content.withIndex().forEach { (index, plCommand) ->
             if (plCommand.content.size == 1) {
@@ -62,23 +65,32 @@ class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
                 if (launch && ! list.ampersand) {
                     // Launch immediately
                     if (command.simpleCommand != null) {
-                        println("Launching simpleCommand" + command.simpleCommand)
+                        log.debug("Launching simpleCommand" + command.simpleCommand)
                         result = launchSimpleCommand(command.simpleCommand)
                     } else {
-                        println("Launching subShell " + command.subShell)
+                        log.debug("Launching subShell " + command.subShell)
                     }
                 } else if (launch) {
-                    println("Launching in background")
+                    log.debug("Launching in background")
+                    // Launch immediately
+                    if (command.simpleCommand != null) {
+                        log.debug("  Launching simpleCommand" + command.simpleCommand)
+                        result = launchBackgroundCommand {
+                            launchSimpleCommand(command.simpleCommand)
+                        }
+                    } else {
+                        log.debug("  Launching subShell " + command.subShell)
+                    }
                     // Launch in background
                 }
             } else {
-                println("Launching pipeline: " + plCommand.content.joinToString(" "))
+                log.debug("Launching pipeline: " + plCommand.content.joinToString(" "))
             }
         }
         return result
     }
 
-    private fun launchSimpleCommand(sc: KashParser.SimpleCommand): CommandResult {
+    private fun launchSimpleCommand(sc: SimpleCommand): CommandResult {
         val pb = ProcessBuilder(findPath(sc.content))
         if (sc.input != null) pb.redirectInput(File(sc.input))
         if (sc.output != null) pb.redirectInput(File(sc.output))
@@ -100,5 +112,22 @@ class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
         val result2 = result.map { it!!.replace('/', File.separatorChar) }
         return result2
     }
+
+    private fun launchBackgroundCommand(f: () -> CommandResult): CommandResult {
+        val future = backgroundProcessesExecutor.submit<Void> {
+            val commandResult = f()
+            onFinish(BackgroundCommandResult(42, commandResult.returnCode))
+            commandResult.display()
+            null
+        }
+        return CommandResult(0)
+    }
+
+    private fun onFinish(result: BackgroundCommandResult) {
+        log.debug("Background command completed: $result")
+    }
+
+    private val backgroundProcessesExecutor: ExecutorService = Executors.newFixedThreadPool(10)
+    private val backgroundProcesses = hashMapOf<Int, BackgroundCommand>()
 
 }
