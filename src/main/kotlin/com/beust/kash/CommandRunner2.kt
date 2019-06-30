@@ -85,17 +85,32 @@ class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
                 }
             } else {
                 log.debug("Launching pipeline: " + plCommand.content.joinToString(" "))
+                val builders = plCommand.content.map {
+                    // TOOD: handle the case where it's it.subShell and not it.simpleCommand
+                    simpleCommandToProcessBuilder(it.simpleCommand)
+                }
+                val r = ProcessBuilder.startPipeline(builders)
+                r[r.size - 1].let { lastProcess ->
+                    val output = Streams.readStream(lastProcess.inputStream)
+                    val error = Streams.readStream(lastProcess.errorStream)
+                    result = CommandResult(0, output, error)
+                }
+
             }
         }
         return result
     }
 
-    private fun launchSimpleCommand(sc: SimpleCommand): CommandResult {
-        val pb = ProcessBuilder(findPath(sc.content))
-        if (sc.input != null) pb.redirectInput(File(sc.input))
-        if (sc.output != null) pb.redirectInput(File(sc.output))
-//        if (sc.error != null) pb.redirectInput(File(sc.error))
+    private fun simpleCommandToProcessBuilder(sc: SimpleCommand): ProcessBuilder {
+        return ProcessBuilder(findPath(sc.content)).also { pb ->
+            if (sc.input != null) pb.redirectInput(File(sc.input))
+            if (sc.output != null) pb.redirectInput(File(sc.output))
+            //        if (sc.error != null) pb.redirectInput(File(sc.error))
+        }
+    }
 
+    private fun launchSimpleCommand(sc: SimpleCommand): CommandResult {
+        val pb = simpleCommandToProcessBuilder(sc)
         log.debug("Launching " + pb.command().joinToString(" "))
 
         val process = pb.start()
