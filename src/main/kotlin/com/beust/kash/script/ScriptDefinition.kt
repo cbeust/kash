@@ -68,7 +68,7 @@ abstract class ScriptDefinition(val jsr223Bindings: Bindings) : ScriptTemplateWi
 
     private val lineRunner: LineRunner? get() = bindings[Engine.LINE_RUNNER] as LineRunner?
 
-    fun os(line: String) = "hello"//: CommandResult? = lineRunner?.runLine(line, false)
+    fun os(line: String) = lineRunner?.runLine(line, true)
 }
 
 object CompilationConfiguration : ScriptCompilationConfiguration(
