@@ -1,6 +1,7 @@
 package com.beust.kash
 
-import com.beust.kash.parser.KashParser
+import com.beust.kash.Command
+import com.beust.kash.parser.*
 import org.assertj.core.api.Assertions.assertThat
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -12,15 +13,15 @@ val idTransformer: TokenTransform = { word: Token.Word, s: List<String> -> s }
 class Parser3Test {
     @DataProvider
     fun singleCommandDp() = arrayOf(
-            arrayOf("ls", KashParser.SimpleCommand(listOf("ls"), null, null)),
-            arrayOf("ls -l", KashParser.SimpleCommand(listOf("ls", "-l"), null, null)),
-            arrayOf("ls -l > a.txt", KashParser.SimpleCommand(listOf("ls", "-l"), null, "a.txt")),
-            arrayOf("ls -l < b.txt", KashParser.SimpleCommand(listOf("ls", "-l"), "b.txt", null)),
-            arrayOf("ls -l < b.txt > a.txt", KashParser.SimpleCommand(listOf("ls", "-l"), "b.txt", "a.txt"))
+            arrayOf("ls", SimpleCommand(listOf("ls"), null, null)),
+            arrayOf("ls -l", SimpleCommand(listOf("ls", "-l"), null, null)),
+            arrayOf("ls -l > a.txt", SimpleCommand(listOf("ls", "-l"), null, "a.txt")),
+            arrayOf("ls -l < b.txt", SimpleCommand(listOf("ls", "-l"), "b.txt", null)),
+            arrayOf("ls -l < b.txt > a.txt", SimpleCommand(listOf("ls", "-l"), "b.txt", "a.txt"))
     )
 
     @Test(dataProvider = "singleCommandDp")
-    fun singleCommand(line: String, expected: KashParser.SimpleCommand) {
+    fun singleCommand(line: String, expected: SimpleCommand) {
         val sc = KashParser(StringReader(line))
         val goal = sc.SimpleCommand()
         println(goal)
@@ -31,23 +32,23 @@ class Parser3Test {
 
     @DataProvider
     fun subShellDp() = arrayOf(
-        arrayOf("( ls )", KashParser.SubShell(KashParser.CompoundList(
-                listOf(KashParser.SimpleCommand(listOf("ls"), null, null)))))
-//        arrayOf("( ls | wc)", KashParser.SubShell(KashParser.CompoundList(listOf(
+        arrayOf("( ls )", SubShell(CompoundList(
+                listOf(SimpleCommand(listOf("ls"), null, null)))))
+//        arrayOf("( ls | wc)", SubShell(CompoundList(listOf(
 //
-//                KashParser.PipeCommand(listOf(listOf("ls"), listOf("wc"))))))),
-//        arrayOf("( ls -l > a.txt| wc)", KashParser.PipeCommand(listOf(listOf("ls", "-l"), listOf("wc"))))
+//                PipeCommand(listOf(listOf("ls"), listOf("wc"))))))),
+//        arrayOf("( ls -l > a.txt| wc)", PipeCommand(listOf(listOf("ls", "-l"), listOf("wc"))))
     )
 
     @Test(dataProvider = "subShellDp")
-    fun subShell(line: String, expected: KashParser.SubShell) {
+    fun subShell(line: String, expected: SubShell) {
         val sc = KashParser(StringReader(line))
         val goal = sc.SubShell()
         assertThat(goal.command.content).isEqualTo(expected.command.content);
     }
 
     private fun simpleCommand(vararg word: String, input: String? = null, output: String? = null)
-            = KashParser.SimpleCommand(word.toList(), input, output, null)
+            = SimpleCommand(word.toList(), input, output, null)
 
     @DataProvider
     fun commandDp(): Array<Array<Any>> {
@@ -55,7 +56,7 @@ class Parser3Test {
         return arrayOf(
                 arrayOf("ls -l > a.txt", true, simpleCommand("ls", "-l", output = "a.txt")),
                 arrayOf("ls -l", true, sc),
-                arrayOf("(ls -l)", false, KashParser.SubShell(KashParser.CompoundList(listOf(sc)))))
+                arrayOf("(ls -l)", false, SubShell(CompoundList(listOf(sc)))))
     }
 
     @Test(dataProvider = "commandDp")
@@ -69,7 +70,7 @@ class Parser3Test {
         }
     }
 
-    private fun command(args: List<String>) = KashParser.Command(KashParser.SimpleCommand(args, null, null, null), null)
+    private fun command(args: List<String>) = Command(SimpleCommand(args, null, null, null), null)
 
     @DataProvider
     fun simpleListDp(): Array<Array<Any>> {
@@ -83,8 +84,8 @@ class Parser3Test {
     fun simpleList(line: String, expected: Any) {
         val parser = KashParser(StringReader(line))
         val result = parser.SimpleList()
-        assertThat(result.content[0]).isEqualTo(KashParser.PipeLineCommand(listOf(command(listOf("ls", "-l"))), null))
-        assertThat(result.content[1]).isEqualTo(KashParser.PipeLineCommand(listOf(command(listOf("echo"))), "&&"))
+        assertThat(result.content[0]).isEqualTo(PipeLineCommand(listOf(command(listOf("ls", "-l"))), null))
+        assertThat(result.content[1]).isEqualTo(PipeLineCommand(listOf(command(listOf("echo"))), "&&"))
     }
 }
 
@@ -98,11 +99,11 @@ class ParserTest {
 
 //    @DataProvider
 //    fun singleCommandDp() = arrayOf(
-//            arrayOf("ls -l", KashParser.SingleCommand(listOf("ls", "-l"), null, null))
+//            arrayOf("ls -l", SingleCommand(listOf("ls", "-l"), null, null))
 //    )
 //
 //    @Test(dataProvider = "singleCommandDp")
-//    fun singleCommand(line: String, command: KashParser.Command<List<String>>) {
+//    fun singleCommand(line: String, command: Command<List<String>>) {
 //        val sc = KashParser(StringReader(line))
 //        val goal = sc.Goal2()
 //        assertThat(goal.content).isEqualTo(command.content)
@@ -111,12 +112,12 @@ class ParserTest {
 
 //    @DataProvider
 //    fun multiCommandDp() = arrayOf(
-//            arrayOf("ls -l | wc -l", KashParser.PipeCommand(listOf(listOf("ls", "-l"), listOf("wc", "-l")))),
-//            arrayOf("ls -l && echo a", KashParser.PipeCommand(listOf(listOf("ls", "-l"), listOf("echo", "a"))))
+//            arrayOf("ls -l | wc -l", PipeCommand(listOf(listOf("ls", "-l"), listOf("wc", "-l")))),
+//            arrayOf("ls -l && echo a", PipeCommand(listOf(listOf("ls", "-l"), listOf("echo", "a"))))
 //    )
 //
 //    @Test(dataProvider = "multiCommandDp")
-//    fun multiCommand(line: String, command: KashParser.Command<List<List<String>>>) {
+//    fun multiCommand(line: String, command: Command<List<List<String>>>) {
 //        val sc = KashParser(StringReader(line))
 //        val goal = sc.Goal2()
 //        assertThat(goal.content).isEqualTo(command.content)

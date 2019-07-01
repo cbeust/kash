@@ -55,6 +55,9 @@ class KashModule() : AbstractModule() {
         bind(ScriptEngine::class.java).toInstance(scriptEngine)
         bind(Engine::class.java).toInstance(engine)
         val context = KashContext(engine)
+        DotKashJsonReader.dotKash?.scriptPath?.let {
+            context.scriptPath.addAll(it)
+        }
         bind(KashContext::class.java).toInstance(context)
         bind(ExecutableFinder::class.java).toInstance(ExecutableFinder(context.paths))
         bind(ScriptFinder::class.java).toInstance(ScriptFinder(context.scriptPath))

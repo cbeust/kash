@@ -4,6 +4,7 @@ import com.beust.kash.parser.SimpleCommand
 import com.beust.kash.parser.SimpleList
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.io.FileReader
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -15,26 +16,26 @@ class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
             inheritIo: Boolean): CommandResult {
 //        val firstWord = command.content[0]
 
-        val result =
-            if (commandSearchResult.type == CommandType.BUILT_IN) {
+        val words = line.split(" ", "\t")
+        val result = when {
+            commandSearchResult.type == CommandType.BUILT_IN -> {
                 // Built-in command
                 log.debug("BUILT IN COMMAND")
-                CommandResult(0)
-//                builtins.commands[firstWord]!!(command.content)
-//                    builtinCommand(command.words)
-            } else if (commandSearchResult.type == CommandType.COMMAND) {
-                // Shell command
-//                runCommand(command, inheritIo)
-                runCommand(command!!)
-            } else if (commandSearchResult.type == CommandType.SCRIPT) {
-                log.debug("SCRIPT")
-                CommandResult(0)
-//                val result = engine.eval(FileReader(File(commandSearchResult.path)),
-//                        command.content.subList(1, command.content.size))
-//                CommandResult(0, result?.toString())
-            } else {
-                throw IllegalArgumentException("Unknown command type: ${commandSearchResult.type}")
+                builtins.commands[commandSearchResult.path]!!(words)
             }
+            commandSearchResult.type == CommandType.COMMAND -> {
+                // Shell command
+                runCommand(command!!)
+            }
+            commandSearchResult.type == CommandType.SCRIPT -> {
+                // Script
+                log.debug("SCRIPT")
+                val result = engine.eval(FileReader(File(commandSearchResult.path)),
+                        words.subList(1, words.size))
+                CommandResult(0, result?.toString())
+            }
+            else -> throw IllegalArgumentException("Unknown command type: ${commandSearchResult.type}")
+        }
         return result
     }
 

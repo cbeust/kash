@@ -53,12 +53,14 @@ class Builtins @Inject constructor(private val context: KashContext,
     }
 
     private fun cd(words: List<String>): CommandResult {
+        if (words.size == 1) return CommandResult(0)
+
         val stack = context.directoryStack
         val currentDir = stack.peek()
         val targetDir = File(words[1])
         val dir =
-                if (targetDir.isAbsolute) targetDir
-                else File(currentDir, words[1])
+            if (targetDir.isAbsolute) targetDir
+            else File(currentDir, words[1])
         val rc =
             if (words[1] == "-" && ! stack.isEmpty()) {
                 stack.pop()
