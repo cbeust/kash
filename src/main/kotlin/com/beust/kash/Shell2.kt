@@ -126,7 +126,13 @@ class Shell2 @Inject constructor(
                     val shell2 = Shell2(terminal, engine, context, builtins, executableFinder, scriptFinder,
                             builtinFinder)
                     val newLine = line.substring(line.indexOf("(") + 1,line.lastIndexOf(")"))
-                    shell2.runLine(newLine, inheritIo)
+                    if (list.ampersand) {
+                        Background.launchBackgroundCommand {
+                            shell2.runLine(newLine, inheritIo)
+                        }
+                    } else {
+                        shell2.runLine(newLine, inheritIo)
+                    }
                 }
             } catch(ex: Exception) {
                 runKotlin(line)

@@ -5,8 +5,6 @@ import com.beust.kash.parser.SimpleList
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileReader
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
         private val commandFinder: CommandFinder, private val context: KashContext) {
@@ -20,16 +18,17 @@ class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
         val result = when {
             commandSearchResult.type == CommandType.BUILT_IN -> {
                 // Built-in command
-                log.debug("BUILT IN COMMAND")
+                log.debug("Detected built-in command")
                 builtins.commands[commandSearchResult.path]!!(words)
             }
             commandSearchResult.type == CommandType.COMMAND -> {
                 // Shell command
+                log.debug("Detected command")
                 runCommand(command!!)
             }
             commandSearchResult.type == CommandType.SCRIPT -> {
                 // Script
-                log.debug("SCRIPT")
+                log.debug("Detected script")
                 val result = engine.eval(FileReader(File(commandSearchResult.path)),
                         words.subList(1, words.size))
                 CommandResult(0, result?.toString())
@@ -76,7 +75,7 @@ class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
                     // Launch immediately
                     if (command.simpleCommand != null) {
                         log.debug("  Launching simpleCommand" + command.simpleCommand)
-                        result = launchBackgroundCommand {
+                        result = Background.launchBackgroundCommand( { r: BackgroundCommandResult -> onFinish(r)}) {
                             launchSimpleCommand(command.simpleCommand)
                         }
                     } else {
@@ -129,21 +128,7 @@ class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
         return result2
     }
 
-    private fun launchBackgroundCommand(f: () -> CommandResult): CommandResult {
-        val future = backgroundProcessesExecutor.submit<Void> {
-            val commandResult = f()
-            onFinish(BackgroundCommandResult(42, commandResult.returnCode))
-            commandResult.display()
-            null
-        }
-        return CommandResult(0)
-    }
-
     private fun onFinish(result: BackgroundCommandResult) {
         log.debug("Background command completed: $result")
     }
-
-    private val backgroundProcessesExecutor: ExecutorService = Executors.newFixedThreadPool(10)
-    private val backgroundProcesses = hashMapOf<Int, BackgroundCommand>()
-
 }

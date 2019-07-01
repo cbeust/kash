@@ -129,7 +129,6 @@ Command Command():
     ( sc = SimpleCommand() { result = new Command(sc, null); })
     |
     ss = SubShell() { result = new Command(null, ss); }
-    <EOF>
     )
     {
     return result;
