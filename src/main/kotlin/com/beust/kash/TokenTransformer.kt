@@ -1,6 +1,8 @@
 package com.beust.kash
 
 import com.beust.kash.Parser.Parser.isWord
+import com.beust.kash.parser.SimpleCommand
+import com.beust.kash.parser.Word
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.FileSystems
@@ -20,21 +22,30 @@ interface TokenTransformer {
      * passed, while the token provides additional semantic information, such
      * as whether that token is surrounded by quotes, etc...
      */
-    fun transform(token: Token.Word, words: List<String>): List<String>
+    fun transform(token: Token.Word?, words: List<String>): List<String>
+}
+
+interface TokenTransformer2 {
+    fun transform(command: SimpleCommand): List<Word>
 }
 
 /**
  * Expand glob patterns (*, ?, etc...).
  */
-class GlobTransformer(private val directoryStack: Stack<String>) : TokenTransformer {
+class GlobTransformer(private val directoryStack: Stack<String>) : TokenTransformer, TokenTransformer2 {
     private val log = LoggerFactory.getLogger(GlobTransformer::class.java)
 
     @Suppress("PrivatePropertyName")
     private val GLOB_CHARACTERS = "*?[]".toSet()
 
-    override fun transform(token: Token.Word, words: List<String>): List<String> {
+    override fun transform(command: SimpleCommand): List<Word> {
+        val words = command.content
+        return command.content
+    }
+
+    override fun transform(token: Token.Word?, words: List<String>): List<String> {
         val result = words.flatMap { word ->
-            if (token.isWord && token.surroundedBy == null) {
+            if (token!!.isWord && token.surroundedBy == null) {
                 if (word.toSet().intersect(GLOB_CHARACTERS).isEmpty()) {
                     listOf(word)
                 } else {
@@ -61,11 +72,16 @@ class GlobTransformer(private val directoryStack: Stack<String>) : TokenTransfor
 /**
  * Replace lines surrounded by backticks with their evaluation by the shell.
  */
-class BackTickTransformer(private val lineRunner: LineRunner):
-        TokenTransformer {
-    override fun transform(token: Token.Word, words: List<String>): List<String> {
+class BackTickTransformer(private val lineRunner: LineRunner): TokenTransformer, TokenTransformer2 {
+
+    override fun transform(command: SimpleCommand): List<Word> {
+        val words = command.content
+        return command.content
+    }
+
+    override fun transform(token: Token.Word?, words: List<String>): List<String> {
         val result = words.flatMap { word ->
-            if (token.surroundedBy == "`") {
+            if (token!!.surroundedBy == "`") {
                 val word = token._name.toString()
                 val result = lineRunner.runLine(word, inheritIo = false)
                 if (result.stdout != null) {
@@ -90,12 +106,17 @@ object Tilde {
 /**
  * Replace occurrences of ~ with the user home dir.
  */
-class TildeTransformer: TokenTransformer {
+class TildeTransformer: TokenTransformer, TokenTransformer2 {
     val homeDir = System.getProperty("user.home")
 
-    override fun transform(token: Token.Word, words: List<String>): List<String> {
+    override fun transform(command: SimpleCommand): List<Word> {
+        val words = command.content
+        return command.content
+    }
+
+    override fun transform(token: Token.Word?, words: List<String>): List<String> {
         val result =
-            if (token.isWord && token.surroundedBy == null) {
+            if (token!!.isWord && token.surroundedBy == null) {
                 words.map {
                     Tilde.expand(it)
                 }
@@ -110,10 +131,15 @@ class TildeTransformer: TokenTransformer {
 /**
  * Replace environment variables with their value.
  */
-class EnvVariableTransformer(private val env: Map<String, String>): TokenTransformer {
+class EnvVariableTransformer(private val env: Map<String, String>): TokenTransformer, TokenTransformer2 {
     private val log = LoggerFactory.getLogger(EnvVariableTransformer::class.java)
 
-    override fun transform(token: Token.Word, words: List<String>): List<String> {
+    override fun transform(command: SimpleCommand): List<Word> {
+        val words = command.content
+        return command.content
+    }
+
+    override fun transform(token: Token.Word?, words: List<String>): List<String> {
         val result = words.flatMap { word ->
             var i = 0
             val finds = arrayListOf<Pair<Int, Int>>()

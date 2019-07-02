@@ -102,7 +102,7 @@ class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
     }
 
     private fun simpleCommandToProcessBuilder(sc: SimpleCommand): ProcessBuilder {
-        return ProcessBuilder(findPath(sc.content)).also { pb ->
+        return ProcessBuilder(findPath(sc.words)).also { pb ->
             if (sc.input != null) pb.redirectInput(File(sc.input))
             if (sc.output != null) pb.redirectOutput(File(sc.output))
             //        if (sc.error != null) pb.redirectInput(File(sc.error))

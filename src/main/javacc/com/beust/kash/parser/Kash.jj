@@ -1,6 +1,6 @@
 options {
     STATIC = false;
-    DEBUG_PARSER = false;
+    DEBUG_PARSER = true;
 }
 
 PARSER_BEGIN(KashParser)
@@ -32,7 +32,7 @@ PARSER_END(KashParser)
 SKIP:  { " " | "\t" | "\n" | "\r" }
 TOKEN: {
     ";" | "&&" | "||"
-    | <WORD: (["-", ".", "a"-"z", "A"-"Z", "0"-"9"]) +>
+    | <WORD: (["-", "~", ".", "a"-"z", "A"-"Z", "0"-"9"]) +>
 }
 
 CompoundList CompoundList():
@@ -102,17 +102,19 @@ SimpleCommand SimpleCommand():
     Token w = null;
     String input = null;
     String output = null;
-    List<String> words = new ArrayList<String>();
+    List<Word> words = new ArrayList<Word>();
 }
 {
-    (w = <WORD> { words.add(w.image); })+
+    (
+        (w = <WORD> { words.add(new Word(w.image, null)); }
+        | "\"" w = <WORD> "\"" { words.add(new Word(w.image, "\"")); })+
+    )
     (redir = Redirection() {
         switch(redir.symbol) {
             case(">"): output = redir.destination; break;
             case("<"): input= redir.destination; break;
         }
-     }
-    )*
+    })*
     {
         return new SimpleCommand(words, input, output);
     }

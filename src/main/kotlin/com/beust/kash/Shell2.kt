@@ -1,7 +1,6 @@
 package com.beust.kash
 
-import com.beust.kash.parser.KashParser
-import com.beust.kash.parser.SimpleList
+import com.beust.kash.parser.*
 import com.google.inject.Inject
 import com.google.inject.Singleton
 import org.jline.reader.LineReader
@@ -104,6 +103,20 @@ class Shell2 @Inject constructor(
         }
     }
 
+    private fun transform(list: SimpleList) {
+        list.content.forEach { pipeLineCommand ->
+            pipeLineCommand.content.forEach { command ->
+                if (command.simpleCommand != null) {
+                    command.simpleCommand.words = tokenTransformer2(command.simpleCommand).map { it.content }
+                } else if (command.subShell != null) {
+
+                } else {
+                    throw IllegalArgumentException("Unexpected command content: $command")
+                }
+            }
+        }
+    }
+
     private fun newParser(line: String, inheritIo: Boolean): CommandResult {
         val parser = KashParser(StringReader(line))
         var list: SimpleList? = null
@@ -111,11 +124,12 @@ class Shell2 @Inject constructor(
         val result =
             try {
                 list = parser.SimpleList()
+                transform(list)
                 val plCommand = list.content[0]
                 val command = plCommand.content[0]
                 val simpleCommand = command.simpleCommand
                 if (simpleCommand != null) {
-                    val firstWord = simpleCommand.content[0]
+                    val firstWord = simpleCommand.words[0]
                     commandSearchResult = commandFinder.findCommand(firstWord)
                     if (commandSearchResult == null) {
                         runKotlin(line)
@@ -134,13 +148,14 @@ class Shell2 @Inject constructor(
                         shell2.runLine(newLine, inheritIo)
                     }
                 }
-            } catch(ex: Exception) {
+            } catch(ex: TokenMgrError) {
+                println("Exception: ${ex.message}")
                 runKotlin(line)
             }
         return result
     }
 
-    fun oldParser(line: String, inheritIo: Boolean): CommandResult {
+    private fun oldParser(line: String, inheritIo: Boolean): CommandResult {
         val commands = Parser(::tokenTransformer).parse(line)
 
         fun logCommand(command: Command, type: String) = log.debug("Type($type), Exec:$command")
@@ -153,12 +168,12 @@ class Shell2 @Inject constructor(
                 val firstWord = command.firstWord
                 val commandSearchResult = commandFinder.findCommand(firstWord)
                 result =
-                        if (commandSearchResult != null) {
-                            logCommand(command, commandSearchResult.type.name)
-                            commandRunner.runLine(line, command, commandSearchResult, inheritIo)
-                        } else {
-                            runKotlin(line)
-                        }
+                    if (commandSearchResult != null) {
+                        logCommand(command, commandSearchResult.type.name)
+                        commandRunner.runLine(line, command, commandSearchResult, inheritIo)
+                    } else {
+                        runKotlin(line)
+                    }
             }
         }
         return result ?: CommandResult(1, "Couldn't parse $line")
@@ -193,18 +208,38 @@ class Shell2 @Inject constructor(
         }
     }
 
-    private val tokenTransformers = listOf(
+    private val tokenTransformers2: List<TokenTransformer2> = listOf(
             TildeTransformer(),
             GlobTransformer(directoryStack),
             BackTickTransformer(this),
             EnvVariableTransformer(context.env)
     )
 
-    private fun tokenTransformer(token: Token.Word, words: List<String>): List<String> {
+    private fun tokenTransformer2(command: SimpleCommand): List<Word> {
+        val words = command.content
+        val result = ArrayList(words)
+        log.trace("    Transforming $words")
+        tokenTransformers2.forEach { t ->
+            val transformed = ArrayList(t.transform(command))
+            result.clear()
+            result.addAll(transformed)
+            log.trace("    After " + t.javaClass + ": " + transformed)
+        }
+        return result
+    }
+
+    private val tokenTransformers: List<TokenTransformer> = listOf(
+            TildeTransformer(),
+            GlobTransformer(directoryStack),
+            BackTickTransformer(this),
+            EnvVariableTransformer(context.env)
+    )
+
+    private fun tokenTransformer(token: Token.Word?, words: List<String>): List<String> {
         val result = ArrayList(words)
         log.trace("    Transforming $words")
         tokenTransformers.forEach { t ->
-            val transformed = ArrayList<String>(t.transform(token, result))
+            val transformed = ArrayList(t.transform(token, result))
             result.clear()
             result.addAll(transformed)
             log.trace("    After " + t.javaClass + ": " + transformed)
