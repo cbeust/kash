@@ -110,7 +110,7 @@ class Shell2 @Inject constructor(
         list.content.forEach { pipeLineCommand ->
             pipeLineCommand.content.forEach { command ->
                 if (command.simpleCommand != null) {
-                    command.simpleCommand.words = tokenTransformer2(command.simpleCommand)
+                    tokenTransformer2(command.simpleCommand)
                 } else if (command.subShell != null) {
 
                 } else {
@@ -218,17 +218,14 @@ class Shell2 @Inject constructor(
             EnvVariableTransformer(context.env)
     )
 
-    private fun tokenTransformer2(command: SimpleCommand): List<String> {
+    private fun tokenTransformer2(command: SimpleCommand) {
         val words = command.content
-        val result = ArrayList(words.map { it.content })
-        log.trace("    Transforming $words")
+        val result = ArrayList(words)
+        log.debug("    Transforming $words")
         tokenTransformers2.forEach { t ->
-            val transformed = ArrayList(t.transform(command))
-            result.clear()
-            result.addAll(transformed)
-            log.trace("    After " + t.javaClass + ": " + transformed)
+            val transformed = ArrayList(t.transform(command, result))
+            command.words = transformed
         }
-        return result
     }
 
     private val tokenTransformers: List<TokenTransformer> = listOf(

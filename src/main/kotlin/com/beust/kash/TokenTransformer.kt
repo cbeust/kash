@@ -2,6 +2,7 @@ package com.beust.kash
 
 import com.beust.kash.Parser.Parser.isWord
 import com.beust.kash.parser.SimpleCommand
+import com.beust.kash.parser.Word
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.FileSystems
@@ -25,7 +26,7 @@ interface TokenTransformer {
 }
 
 interface TokenTransformer2 {
-    fun transform(command: SimpleCommand): List<String>
+    fun transform(command: SimpleCommand, words: List<Word>): List<String>
 }
 
 /**
@@ -37,8 +38,7 @@ class GlobTransformer(private val directoryStack: Stack<String>) : TokenTransfor
     @Suppress("PrivatePropertyName")
     private val GLOB_CHARACTERS = "*?[]".toSet()
 
-    override fun transform(command: SimpleCommand): List<String> {
-        val words = command.content
+    override fun transform(command: SimpleCommand, words: List<Word>): List<String> {
         val result = words.flatMap { w ->
             if (w.surroundedBy == null) {
                 val word = w.content
@@ -94,9 +94,21 @@ class GlobTransformer(private val directoryStack: Stack<String>) : TokenTransfor
  */
 class BackTickTransformer(private val lineRunner: LineRunner): TokenTransformer, TokenTransformer2 {
 
-    override fun transform(command: SimpleCommand): List<String> {
-        val words = command.content
-        return command.content.map { it.content }
+    override fun transform(command: SimpleCommand, words: List<Word>): List<String> {
+        val result = words.flatMap { w ->
+            if (w.surroundedBy == "`") {
+                val word = w.content
+                val r = lineRunner.runLine(word, inheritIo = false)
+                if (r.stdout != null) {
+                    listOf(r.stdout.trim())
+                } else {
+                    throw IllegalArgumentException(r.stderr)
+                }
+            } else {
+                listOf(w.content)
+            }
+        }
+        return result
     }
 
     override fun transform(token: Token.Word?, words: List<String>): List<String> {
@@ -129,8 +141,7 @@ object Tilde {
 class TildeTransformer: TokenTransformer, TokenTransformer2 {
     val homeDir = System.getProperty("user.home")
 
-    override fun transform(command: SimpleCommand): List<String> {
-        val words = command.content
+    override fun transform(command: SimpleCommand, words: List<Word>): List<String> {
         return command.content.map { it.content }
     }
 
@@ -154,8 +165,7 @@ class TildeTransformer: TokenTransformer, TokenTransformer2 {
 class EnvVariableTransformer(private val env: Map<String, String>): TokenTransformer, TokenTransformer2 {
     private val log = LoggerFactory.getLogger(EnvVariableTransformer::class.java)
 
-    override fun transform(command: SimpleCommand): List<String> {
-        val words = command.content
+    override fun transform(command: SimpleCommand, words: List<Word>): List<String> {
         return command.content.map { it.content }
     }
 
