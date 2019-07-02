@@ -146,22 +146,20 @@ class Shell2 @Inject constructor(
         fun logCommand(command: Command, type: String) = log.debug("Type($type), Exec:$command")
 
         var result: CommandResult? = null
-        commands.forEach { command ->
-            val firstWord = command.firstWord
-            val commandSearchResult = commandFinder.findCommand(firstWord)
-            result =
-                if (commandSearchResult != null) {
-                    logCommand(command, commandSearchResult.type.name)
-                    commandRunner.runLine(line, command, commandSearchResult, inheritIo)
-                } else {
-                    logCommand(command, "Kotlin")
-                    try {
-                        val er = engine.eval(line)
-                        CommandResult(0, er?.toString(), null)
-                    } catch(ex: Exception) {
-                        CommandResult(1, null, ex.message)
-                    }
-                }
+        if (commands.isEmpty()) {
+            result = runKotlin(line)
+        } else {
+            commands.forEach { command ->
+                val firstWord = command.firstWord
+                val commandSearchResult = commandFinder.findCommand(firstWord)
+                result =
+                        if (commandSearchResult != null) {
+                            logCommand(command, commandSearchResult.type.name)
+                            commandRunner.runLine(line, command, commandSearchResult, inheritIo)
+                        } else {
+                            runKotlin(line)
+                        }
+            }
         }
         return result ?: CommandResult(1, "Couldn't parse $line")
     }
