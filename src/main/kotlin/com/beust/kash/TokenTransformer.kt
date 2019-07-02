@@ -139,10 +139,12 @@ object Tilde {
  * Replace occurrences of ~ with the user home dir.
  */
 class TildeTransformer: TokenTransformer, TokenTransformer2 {
-    val homeDir = System.getProperty("user.home")
-
     override fun transform(command: SimpleCommand, words: List<Word>): List<String> {
-        return command.content.map { it.content }
+        val result = words.map {
+            if (it.surroundedBy == null) Tilde.expand(it.content)
+            else it.content
+        }
+        return result
     }
 
     override fun transform(token: Token.Word?, words: List<String>): List<String> {
@@ -166,7 +168,52 @@ class EnvVariableTransformer(private val env: Map<String, String>): TokenTransfo
     private val log = LoggerFactory.getLogger(EnvVariableTransformer::class.java)
 
     override fun transform(command: SimpleCommand, words: List<Word>): List<String> {
-        return command.content.map { it.content }
+        val result = words.flatMap { w ->
+            val word = w.content
+            var i = 0
+            val finds = arrayListOf<Pair<Int, Int>>()
+            while (i < word.length) {
+                if (word[i] == '$') {
+                    val start = i
+
+                    if (word[i + 1] == '{') {
+                        while (i < word.length && word[i] != '}') i++
+                        i++
+                    } else {
+                        i++
+                        while (i < word.length && isWord(word[i])) i++
+                    }
+                    finds.add(Pair(start, i))
+                }
+                i++
+            }
+
+            if (finds.isNotEmpty()) {
+                val result = StringBuilder()
+                var index = 0
+                var i = 0
+                while (i < finds.size) {
+                    val first = finds[i].first
+                    val second = finds[i].second
+                    val parsedVariable = word.substring(first, second)
+                    val variable = if (parsedVariable.startsWith("\${") and parsedVariable.endsWith("}"))
+                        parsedVariable.substring(2, parsedVariable.length - 1)
+                    else parsedVariable.substring(1)
+                    result.append(word.substring(index, first))
+                    val expanded = env[variable] ?: ""
+                    result.append(expanded)
+                    log.debug("Expanded $parsedVariable to $expanded")
+                    index = second
+                    i++
+                }
+                result.append(word.substring(index, word.length))
+                listOf(result.toString())
+
+            } else {
+                listOf(word)
+            }
+        }
+        return result
     }
 
     override fun transform(token: Token.Word?, words: List<String>): List<String> {

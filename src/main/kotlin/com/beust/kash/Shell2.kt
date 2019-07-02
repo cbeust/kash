@@ -1,9 +1,6 @@
 package com.beust.kash
 
-import com.beust.kash.parser.KashParser
-import com.beust.kash.parser.SimpleCommand
-import com.beust.kash.parser.SimpleList
-import com.beust.kash.parser.TokenMgrError
+import com.beust.kash.parser.*
 import com.google.inject.Inject
 import com.google.inject.Singleton
 import org.jline.reader.LineReader
@@ -221,10 +218,13 @@ class Shell2 @Inject constructor(
     private fun tokenTransformer2(command: SimpleCommand) {
         val words = command.content
         val result = ArrayList(words)
-        log.debug("    Transforming $words")
+        log.trace("    Transforming $words")
         tokenTransformers2.forEach { t ->
             val transformed = ArrayList(t.transform(command, result))
-            command.words = transformed
+            command.words = ArrayList(transformed)
+            log.trace("    After ${t::class}: $transformed")
+            result.clear()
+            result.addAll(transformed.map { Word(it, null) })
         }
     }
 
