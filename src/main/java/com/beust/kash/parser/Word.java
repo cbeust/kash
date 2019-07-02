@@ -11,4 +11,10 @@ public class Word {
         this.content = content;
         this.surroundedBy = surroundedBy;
     }
+    @Override
+    public String toString() {
+        return surroundedBy == null
+                ? content
+                : surroundedBy + content + surroundedBy;
+    }
 }
