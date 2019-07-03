@@ -10,7 +10,7 @@ sealed class Token {
             val name2 =
                     if (surroundedBy == null) name
                     else surroundedBy + name + surroundedBy
-            return "Word(\"$name2\")"
+            return "SimpleCmd(\"$name2\")"
         }
 
         /** The actual name of this token after transformation */

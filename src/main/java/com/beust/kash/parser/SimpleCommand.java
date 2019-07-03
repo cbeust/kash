@@ -5,17 +5,17 @@ import java.util.List;
 import static com.beust.kash.parser.KashParser.joinToString;
 
 public class SimpleCommand {
-    public final List<Word> content;
+    public final List<SimpleCmd> content;
     private List<String> words = null;
     public final String input;
     public final String output;
     public final String before;
 
-    public SimpleCommand(List<Word> content, String input, String output, String before) {
+    public SimpleCommand(List<SimpleCmd> content, String input, String output, String before) {
         this.content = content; this.input = input; this.output = output; this.before = before;
     }
 
-    public SimpleCommand(List<Word> content, String input, String output) {
+    public SimpleCommand(List<SimpleCmd> content, String input, String output) {
         this(content, input, output, null);
     }
 

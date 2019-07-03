@@ -99,25 +99,38 @@ List<PipeLineCommand> SimpleList1():
 SimpleCommand SimpleCommand():
 {
     RedirectionNode redir = null;
-    Token w = null;
     String input = null;
     String output = null;
-    List<Word> words = new ArrayList<Word>();
+    Token w;
+    List<String> words = new ArrayList<String>();
+    List<SimpleCmd> simpleCmds = new ArrayList<SimpleCmd>();
 }
 {
-    (w = <WORD> { words.add(new Word(w.image, null)); }
-        | "\"" w = <WORD> "\"" { words.add(new Word(w.image, "\"")); }
-        | "`" w = <WORD> "`" { words.add(new Word(w.image, "`")); }
-    )+
-    (redir = Redirection() {
-        switch(redir.symbol) {
-            case(">"): output = redir.destination; break;
-            case("<"): input= redir.destination; break;
-        }
-    })*
+    (
+        (
+            (w = <WORD> { words.add(w.image); } )+ {
+                simpleCmds.add(new SimpleCmd(new ArrayList(words))); words.clear();
+            }
+            |
+            "\"" (w = <WORD> { words.add(w.image); } )+  "\""  {
+                simpleCmds.add(new SimpleCmd(new ArrayList(words), "\"")); words.clear();
+            }
+            |
+            "`" (w = <WORD> { words.add(w.image); } )+  "`"  {
+                simpleCmds.add(new SimpleCmd(new ArrayList(words), "`")); words.clear();
+            }
+        )+
+
+        (redir = Redirection() {
+            switch(redir.symbol) {
+                case(">"): output = redir.destination; break;
+                case("<"): input= redir.destination; break;
+            }
+        })*
+    )
     {
-        return new SimpleCommand(words, input, output);
-    }
+    return new SimpleCommand(simpleCmds, input, output);
+}
 }
 
 Command Command():

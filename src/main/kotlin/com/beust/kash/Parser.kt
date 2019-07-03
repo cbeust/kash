@@ -2,8 +2,8 @@ package com.beust.kash
 
 import com.beust.kash.Exec.Companion.toExec
 
-//val idTransformer: (Token.Word, String) -> String
-//        = {word: Token.Word, s: String -> s }
+//val idTransformer: (Token.SimpleCmd, String) -> String
+//        = {word: Token.SimpleCmd, s: String -> s }
 
 class Parser(private val transform: TokenTransform) {
 
