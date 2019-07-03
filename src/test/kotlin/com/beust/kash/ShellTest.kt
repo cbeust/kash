@@ -30,7 +30,7 @@ class ShellTest {
 
     fun pipe() {
         val result = shell.runLine("echo a\nb\nc | wc", false)
-        assertThat(result.stdout).startsWith("       1       3       6")
+        assertThat(result.stdout).startsWith("      1       3       6")
     }
 
     fun env() {

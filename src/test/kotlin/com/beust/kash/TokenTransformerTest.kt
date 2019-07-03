@@ -17,10 +17,11 @@ class TokenTransformerTest {
     @Test(dataProvider = "envTransformerTestDp")
     fun envTransformerTest(s: String, expected: String) {
         val env = mapOf("var1" to "b", "var2" to "g")
-        val result = EnvVariableTransformer(env).transform(Token.Word(StringBuilder(s)), listOf(s))
+        val result = EnvVariableTransformer(env).transform(listOf(s))
         assertThat(result).isEqualTo(listOf(expected))
     }
 
+    @Test(enabled = false, description = "Need a correct directory")
     fun globTransformerTest() {
         fun toToken(s: String) = Token.Word(StringBuilder(s))
 

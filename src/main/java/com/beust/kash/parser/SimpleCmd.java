@@ -22,6 +22,13 @@ public class SimpleCmd {
     }
 
     @Override
+    public boolean equals(Object o) {
+        SimpleCmd other = (SimpleCmd) o;
+        return content.equals(other.content)
+                && KashParser.eq(surroundedBy, other.surroundedBy);
+    }
+
+    @Override
     public String toString() {
         return surroundedBy == null
                 ? joinToString(content)

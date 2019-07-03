@@ -25,7 +25,22 @@ interface TokenTransformer {
 }
 
 interface TokenTransformer2 {
-    fun transform(command: SimpleCommand, words: List<SimpleCmd>): List<SimpleCmd>
+    fun transform(command: SimpleCommand, words: List<SimpleCmd>): List<SimpleCmd> {
+        val result = command.content.map {  cmd ->
+            val tWords =
+                if (shouldTransform(cmd)) {
+                    transform(cmd.content)
+                } else {
+                    cmd.content
+                }
+            SimpleCmd(tWords, cmd.surroundedBy)
+        }
+        return result
+    }
+
+    fun shouldTransform(command: SimpleCmd) = command.surroundedBy == null
+
+    fun transform(words: List<String>): List<String>
 }
 
 /**
@@ -37,34 +52,21 @@ class GlobTransformer(private val directoryStack: Stack<String>) : TokenTransfor
     @Suppress("PrivatePropertyName")
     private val GLOB_CHARACTERS = "*?[]".toSet()
 
-    private fun transform(words: List<String>): List<String> {
-        val result =
-            words.flatMap { word ->
-                if (word.toSet().intersect(GLOB_CHARACTERS).isEmpty()) {
-                    listOf(word)
-                } else {
-                    val pathMatcher = FileSystems.getDefault().getPathMatcher("glob:$word")
-                    val matches = File(directoryStack.peek()).listFiles().filter {
-                        pathMatcher.matches(Paths.get(it.name))
-                    }
-                    if (matches.isEmpty()) emptyList()
-                    else matches.map { it.name }
-                }
-            }
-        return result
+    /**
+     * Only transform this command if one of the words contains a glob character.
+     */
+    override fun shouldTransform(command: SimpleCmd) : Boolean {
+        return command.content.any { it.toSet().intersect(GLOB_CHARACTERS).isEmpty() }
     }
 
-    override fun transform(command: SimpleCommand, words: List<SimpleCmd>): List<SimpleCmd> {
-        val result = arrayListOf<SimpleCmd>()
-        command.content.forEach { sc ->
-            val r =
-                if (sc.surroundedBy == null) {
-                    SimpleCmd(transform(sc.content), sc.surroundedBy)
-                } else {
-                    SimpleCmd(sc.content, sc.surroundedBy)
-                }
-
-            result.add(r)
+    override fun transform(words: List<String>): List<String> {
+        val result = words.flatMap { word ->
+            val pathMatcher = FileSystems.getDefault().getPathMatcher("glob:$word")
+            val matches = File(directoryStack.peek()).listFiles().filter {
+                pathMatcher.matches(Paths.get(it.name))
+            }
+            if (matches.isEmpty()) listOf(word)
+            else matches.map { it.name }
         }
         return result
     }
@@ -87,25 +89,16 @@ class GlobTransformer(private val directoryStack: Stack<String>) : TokenTransfor
  * Replace lines surrounded by backticks with their evaluation by the shell.
  */
 class BackTickTransformer(private val lineRunner: LineRunner): TokenTransformer, TokenTransformer2 {
+    override fun shouldTransform(command: SimpleCmd) = command.surroundedBy == "`"
 
-    override fun transform(command: SimpleCommand, words: List<SimpleCmd>): List<SimpleCmd> {
-        val result = arrayListOf<SimpleCmd>()
-        words.forEach { w ->
-            val t =
-                if (w.surroundedBy == "`") {
-                    val words = w.content
-                    val r = lineRunner.runLine(words.joinToString(" "), inheritIo = false)
-                    if (r.stdout != null) {
-                        listOf(r.stdout.trim())
-                    } else {
-                        throw IllegalArgumentException(r.stderr)
-                    }
-                } else {
-                    w.content
-                }
-            result.add(SimpleCmd(t, w.surroundedBy))
-        }
-
+    override fun transform(words: List<String>): List<String> {
+        val r = lineRunner.runLine(words.joinToString(" "), inheritIo = false)
+        val result =
+            if (r.stdout != null) {
+                listOf(r.stdout.trim())
+            } else {
+                throw IllegalArgumentException(r.stderr)
+            }
         return result
     }
 
@@ -137,14 +130,8 @@ object Tilde {
  * Replace occurrences of ~ with the user home dir.
  */
 class TildeTransformer: TokenTransformer, TokenTransformer2 {
-    override fun transform(command: SimpleCommand, words: List<SimpleCmd>): List<SimpleCmd> {
-        val result = words.flatMap { word ->
-            val strings =
-                if (word.surroundedBy == null) word.content.map { Tilde.expand(it) }
-                else word.content
-            listOf(SimpleCmd(strings, word.surroundedBy))
-        }
-        return result
+    override fun transform(words: List<String>): List<String> {
+        return words.map { Tilde.expand(it) }
     }
 
     override fun transform(token: Token.Word?, words: List<String>): List<String> {
@@ -169,52 +156,55 @@ class EnvVariableTransformer(private val env: Map<String, String>): TokenTransfo
 
     private fun isWord(c: Char) = true
 
-    override fun transform(command: SimpleCommand, commands: List<SimpleCmd>): List<SimpleCmd> {
-        val result = arrayListOf<SimpleCmd>()
-        commands.forEach { sc ->
-            val words = sc.content
-            val tWords = words.map { word ->
-                var i = 0
-                val finds = arrayListOf<Pair<Int, Int>>()
-                while (i < word.length) {
-                    if (word[i] == '$') {
-                        val start = i
+    override fun transform(words: List<String>): List<String> {
+        val result = arrayListOf<String>()
+        words.forEach { word ->
+            var i = 0
+            val finds = arrayListOf<Pair<Int, Int>>()
+            while (i < word.length) {
+                if (word[i] == '$') {
+                    val start = i
 
-                        if (word[i + 1] == '{') {
-                            while (i < word.length && word[i] != '}') i++
-                            i++
-                        } else {
-                            i++
-                            while (i < word.length && isWord(word[i])) i++
-                        }
-                        finds.add(Pair(start, i))
+                    if (word[i + 1] == '{') {
+                        while (i < word.length && word[i] != '}') i++
+                        i++
+                    } else {
+                        i++
+                        while (i < word.length && isWord(word[i])) i++
                     }
+                    finds.add(Pair(start, i))
+                }
+                i++
+            }
+
+            if (finds.isNotEmpty()) {
+                val sb = StringBuilder()
+                var index = 0
+                var i = 0
+                while (i < finds.size) {
+                    val first = finds[i].first
+                    val second = finds[i].second
+                    val parsedVariable = word.substring(first, second)
+                    val variable =
+                        if (parsedVariable.startsWith("\${") and parsedVariable.endsWith("}")) {
+                            parsedVariable.substring(2, parsedVariable.length - 1)
+                        } else {
+                            val space = parsedVariable.indexOf(" ", index)
+                            val tab = parsedVariable.indexOf("\t", index)
+                            val end = if (space != -1) space else if (tab != -1) tab else parsedVariable.length
+                            parsedVariable.substring(1, end)
+                        }
+                    sb.append(word.substring(index, first))
+                    val expanded = env[variable] ?: ""
+                    sb.append(expanded)
+                    log.debug("Expanded $parsedVariable to $expanded")
+                    index = second
                     i++
                 }
-
-                if (finds.isNotEmpty()) {
-                    val sb = StringBuilder()
-                    var index = 0
-                    var i = 0
-                    while (i < finds.size) {
-                        val first = finds[i].first
-                        val second = finds[i].second
-                        val parsedVariable = word.substring(first, second)
-                        val variable = if (parsedVariable.startsWith("\${") and parsedVariable.endsWith("}"))
-                            parsedVariable.substring(2, parsedVariable.length - 1)
-                        else parsedVariable.substring(1)
-                        sb.append(word.substring(index, first))
-                        val expanded = env[variable] ?: ""
-                        sb.append(expanded)
-                        log.debug("Expanded $parsedVariable to $expanded")
-                        index = second
-                        i++
-                    }
-                    sb.append(word.substring(index, word.length))
-                    result.add(SimpleCmd(listOf(sb.toString()), sc.surroundedBy))
-                } else {
-                    result.add(SimpleCmd(listOf(word), sc.surroundedBy))
-                }
+                sb.append(word.substring(index, word.length))
+                result.add(sb.toString())
+            } else {
+                result.add(word)
             }
         }
 
