@@ -13,10 +13,9 @@ public class KashWordParser {
 }
 PARSER_END(KashWordParser)
 
-SKIP:  { " " | "\t" | "\n" | "\r" }
 TOKEN: {
-    ";" | "&&" | "||"
-    | <WORD: (["_", "-", "~", ".", "a"-"z", "A"-"Z", "0"-"9"]) +>
+    <WORD: (["_", "-", "~", ".", "a"-"z", "A"-"Z", "0"-"9"]) +>
+    | <SPACES: ([" ", "\t"]) +>
 }
 
 
@@ -28,6 +27,7 @@ List<WordFragment> ParsedWord():
 {
     (
         w = <WORD> { result.add(new WordFragment(w.image, true)); }
+        | w = <SPACES> { result.add(new WordFragment(w.image, true)); }
         | "$" w = <WORD> { result.add(new WordFragment(w.image, false)); }
         | "${" w = <WORD> "}" { result.add(new WordFragment(w.image, false)); }
     )+

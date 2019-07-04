@@ -2,8 +2,10 @@ package com.beust.kash
 
 import com.beust.kash.parser.SimpleCmd
 import com.beust.kash.parser.SimpleCommand
+import com.beust.kash.word.KashWordParser
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.io.StringReader
 import java.nio.file.FileSystems
 import java.nio.file.Paths
 import java.util.*
@@ -157,55 +159,13 @@ class EnvVariableTransformer(private val env: Map<String, String>): TokenTransfo
     private fun isWord(c: Char) = true
 
     override fun transform(words: List<String>): List<String> {
-        val result = arrayListOf<String>()
-        words.forEach { word ->
-            var i = 0
-            val finds = arrayListOf<Pair<Int, Int>>()
-            while (i < word.length) {
-                if (word[i] == '$') {
-                    val start = i
-
-                    if (word[i + 1] == '{') {
-                        while (i < word.length && word[i] != '}') i++
-                        i++
-                    } else {
-                        i++
-                        while (i < word.length && isWord(word[i])) i++
-                    }
-                    finds.add(Pair(start, i))
-                }
-                i++
+        val result = words.map { word ->
+            val fragments = KashWordParser(StringReader(word)).ParsedWord()
+            val r = fragments.map { fragment ->
+                if (fragment.isWord) fragment.word
+                    else env[fragment.word] ?: ""
             }
-
-            if (finds.isNotEmpty()) {
-                val sb = StringBuilder()
-                var index = 0
-                var i = 0
-                while (i < finds.size) {
-                    val first = finds[i].first
-                    val second = finds[i].second
-                    val parsedVariable = word.substring(first, second)
-                    val variable =
-                        if (parsedVariable.startsWith("\${") and parsedVariable.endsWith("}")) {
-                            parsedVariable.substring(2, parsedVariable.length - 1)
-                        } else {
-                            val space = parsedVariable.indexOf(" ", index)
-                            val tab = parsedVariable.indexOf("\t", index)
-                            val end = if (space != -1) space else if (tab != -1) tab else parsedVariable.length
-                            parsedVariable.substring(1, end)
-                        }
-                    sb.append(word.substring(index, first))
-                    val expanded = env[variable] ?: ""
-                    sb.append(expanded)
-                    log.debug("Expanded $parsedVariable to $expanded")
-                    index = second
-                    i++
-                }
-                sb.append(word.substring(index, word.length))
-                result.add(sb.toString())
-            } else {
-                result.add(word)
-            }
+            r.joinToString("")
         }
 
         return result

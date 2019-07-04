@@ -22,8 +22,8 @@ class Parser3Test {
     @DataProvider
     fun wordDp() = arrayOf(
             arrayOf("ab", listOf(word("ab"))),
-            arrayOf("ab \$var1", listOf(word("ab"), env("var1"))),
-            arrayOf("ab \${var1}", listOf(word("ab"), env("var1")))
+            arrayOf("ab \$var1", listOf(word("ab"), word(" "), env("var1"))),
+            arrayOf("ab \${var1}", listOf(word("ab"), word(" "), env("var1")))
         )
 
     @Test(dataProvider = "wordDp")
