@@ -16,9 +16,6 @@ fun main(argv: Array<String>) {
 }
 
 class Main {
-    private val log = LoggerFactory.getLogger(Main::class.java)
-
-
     fun run() {
         System.setProperty("org.jline.terminal.dumb", "true")
         setIdeaIoUseFallback()

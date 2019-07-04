@@ -191,10 +191,10 @@ class Shell @Inject constructor(
     private fun tokenTransformer2(command: SimpleCommand) {
         val words = command.content
         val result = command.content
-        log.debug("    Transforming $words")
+        log.trace("    Transforming $words")
         tokenTransformers.forEach { t ->
             val transformed = t.transform(command, result)
-            log.debug("    After ${t::class}: $transformed")
+            log.trace("    After ${t::class}: $transformed")
             result.clear()
             result.addAll(transformed)
         }

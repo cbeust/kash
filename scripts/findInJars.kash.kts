@@ -5,7 +5,6 @@ import java.util.*
 import java.util.jar.JarInputStream
 
 fun findInJars(name: String, dir: String = "."): Map<String, ArrayList<String>> {
-    println("Dir: $dir")
     val result = hashMapOf<String, ArrayList<String>>()
     File(dir).listFiles()?.forEach {
         if (it.isFile && it.name.endsWith(".jar")) {
@@ -33,8 +32,8 @@ if (args.isEmpty()) {
     println("Usage: findInJars name [directory to search for jar files]")
 } else {
     val result =
-            if (args.size == 1) findInJars(args[0])
-            else findInJars(args[0], args[1])
+        if (args.size == 1) findInJars(args[0])
+        else findInJars(args[0], args[1])
     result.entries.forEach { entry ->
         println(entry.key)
         entry.value.forEach { match ->
