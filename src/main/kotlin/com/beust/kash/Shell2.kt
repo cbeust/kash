@@ -17,10 +17,6 @@ import java.io.StringReader
 import java.nio.file.Paths
 import java.util.*
 
-interface LineRunner {
-    fun runLine(line: String, inheritIo: Boolean): CommandResult
-}
-
 @Suppress("PrivatePropertyName")
 @Singleton
 class Shell2 @Inject constructor(
@@ -40,7 +36,6 @@ class Shell2 @Inject constructor(
     private val reader: LineReader
     private val directoryStack: Stack<String> get() = engine.directoryStack
     private val commandFinder: CommandFinder
-    private val commandRunner: CommandRunner
     private val commandRunner2: CommandRunner2
 
     init {
@@ -67,7 +62,6 @@ class Shell2 @Inject constructor(
                 .build()
         directoryStack.push(File(".").absoluteFile.canonicalPath)
         commandFinder = CommandFinder(listOf(builtinFinder, scriptFinder, executableFinder))
-        commandRunner = CommandRunner(builtins, engine, commandFinder, context)
         commandRunner2 = CommandRunner2(builtins, engine, commandFinder, context)
 
         // Copy the path
@@ -158,30 +152,6 @@ class Shell2 @Inject constructor(
         return result
     }
 
-    private fun oldParser(line: String, inheritIo: Boolean): CommandResult {
-        val commands = Parser(::tokenTransformer).parse(line)
-
-        fun logCommand(command: Command, type: String) = log.debug("Type($type), Exec:$command")
-
-        var result: CommandResult? = null
-        if (commands.isEmpty()) {
-            result = runKotlin(line)
-        } else {
-            commands.forEach { command ->
-                val firstWord = command.firstWord
-                val commandSearchResult = commandFinder.findCommand(firstWord)
-                result =
-                    if (commandSearchResult != null) {
-                        logCommand(command, commandSearchResult.type.name)
-                        commandRunner.runLine(line, command, commandSearchResult, inheritIo)
-                    } else {
-                        runKotlin(line)
-                    }
-            }
-        }
-        return result ?: CommandResult(1, "Couldn't parse $line")
-    }
-
     private fun defaultPrompt(): String {
         val path = Paths.get(directoryStack.peek())
         val size = path.nameCount
@@ -230,24 +200,4 @@ class Shell2 @Inject constructor(
         }
         command.words = result.flatMap { it.content }
     }
-
-    private val tokenTransformers: List<TokenTransformer> = listOf(
-            TildeTransformer(),
-            GlobTransformer(directoryStack),
-            BackTickTransformer(this),
-            EnvVariableTransformer(context.env)
-    )
-
-    private fun tokenTransformer(token: Token.Word?, words: List<String>): List<String> {
-        val result = ArrayList(words)
-        log.trace("    Transforming $words")
-        tokenTransformers.forEach { t ->
-            val transformed = ArrayList(t.transform(token, result))
-            result.clear()
-            result.addAll(transformed)
-            log.trace("    After " + t.javaClass + ": " + transformed)
-        }
-        return result
-    }
-
 }

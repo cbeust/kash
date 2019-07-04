@@ -23,10 +23,8 @@ class TokenTransformerTest {
 
     @Test(enabled = false, description = "Need a correct directory")
     fun globTransformerTest() {
-        fun toToken(s: String) = Token.Word(StringBuilder(s))
-
         val directoryStack = Stack<String>().apply { push("/users/cedricbeust/kotlin/kosh") }
-        val t = GlobTransformer(directoryStack).transform(toToken("*kts"), listOf("*kts"))
+        val t = GlobTransformer(directoryStack).transform(listOf("*kts"))
         assertThat(t).isEqualTo(listOf("a.kts", "build.gradle.kts"))
     }
 
