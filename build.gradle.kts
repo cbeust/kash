@@ -2,7 +2,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 buildscript {
-    val kotlinVer by extra { "1.3.40-eap-105" }
+    val kotlinVer by extra { "1.3.40" }
 
     repositories {
         jcenter()
