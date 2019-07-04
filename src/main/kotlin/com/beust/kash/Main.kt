@@ -25,7 +25,7 @@ class Main {
         try {
             val injector = Guice.createInjector(KashModule())
             val engine = injector.getInstance(Engine::class.java)
-            val shell = injector.getInstance(Shell2::class.java)
+            val shell = injector.getInstance(Shell::class.java)
             engine.lineRunner = shell
             shell.run()
         } catch (e: IOException) {

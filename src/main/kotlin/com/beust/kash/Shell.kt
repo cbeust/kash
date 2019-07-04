@@ -19,7 +19,7 @@ import java.util.*
 
 @Suppress("PrivatePropertyName")
 @Singleton
-class Shell2 @Inject constructor(
+class Shell @Inject constructor(
         private val terminal: Terminal,
         private val engine: Engine,
         private val context: KashContext,
@@ -28,7 +28,7 @@ class Shell2 @Inject constructor(
         private val scriptFinder: ScriptFinder,
         private val builtinFinder: BuiltinFinder) : LineRunner {
 
-    private val log = LoggerFactory.getLogger(Shell2::class.java)
+    private val log = LoggerFactory.getLogger(Shell::class.java)
 
     private val DOT_KASH_KTS = File(System.getProperty("user.home"), ".kash.kts")
     private val KASH_STRINGS = listOf("Kash.ENV", "Kash.PATHS", "Kash.PROMPT", "Kash.DIRS")
@@ -116,8 +116,8 @@ class Shell2 @Inject constructor(
 
     private fun newParser(line: String, inheritIo: Boolean): CommandResult {
         val parser = KashParser(StringReader(line))
-        var list: SimpleList? = null
-        var commandSearchResult: CommandFinder.CommandSearchResult? = null
+        val list: SimpleList?
+        val commandSearchResult: CommandFinder.CommandSearchResult?
         val result =
             try {
                 list = parser.SimpleList()
@@ -134,7 +134,7 @@ class Shell2 @Inject constructor(
                         commandRunner2.runLine(line, list, commandSearchResult, inheritIo)
                     }
                 } else {
-                    val shell2 = Shell2(terminal, engine, context, builtins, executableFinder, scriptFinder,
+                    val shell2 = Shell(terminal, engine, context, builtins, executableFinder, scriptFinder,
                             builtinFinder)
                     val newLine = line.substring(line.indexOf("(") + 1,line.lastIndexOf(")"))
                     if (list.ampersand) {
@@ -181,7 +181,7 @@ class Shell2 @Inject constructor(
         }
     }
 
-    private val tokenTransformers2: List<TokenTransformer2> = listOf(
+    private val tokenTransformers: List<TokenTransformer> = listOf(
             TildeTransformer(),
             GlobTransformer(directoryStack),
             BackTickTransformer(this),
@@ -192,7 +192,7 @@ class Shell2 @Inject constructor(
         val words = command.content
         val result = command.content
         log.debug("    Transforming $words")
-        tokenTransformers2.forEach { t ->
+        tokenTransformers.forEach { t ->
             val transformed = t.transform(command, result)
             log.debug("    After ${t::class}: $transformed")
             result.clear()

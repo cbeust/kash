@@ -7,11 +7,11 @@ import org.testng.annotations.Test
 
 @Test
 class ShellTest {
-    private val shell: Shell2
+    private val shell: Shell
 
     init {
         val injector = Guice.createInjector(KashModule())
-        shell = injector.getInstance(Shell2::class.java)
+        shell = injector.getInstance(Shell::class.java)
 
     }
     private val CommandResult.out get() = this.stdout?.replace("\r", "")
