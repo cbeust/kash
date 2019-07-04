@@ -87,7 +87,6 @@ class Shell @Inject constructor(
 
     override fun runLine(line: String, inheritIo: Boolean): CommandResult {
         return newParser(line, inheritIo)
-//        return oldParser(line, inheritIo)
     }
 
     private fun runKotlin(line: String): CommandResult {

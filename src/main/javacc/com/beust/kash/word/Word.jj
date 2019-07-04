@@ -14,7 +14,8 @@ public class KashWordParser {
 PARSER_END(KashWordParser)
 
 TOKEN: {
-    <WORD: (["a"-"z", "A"-"Z", "0"-"9", "*", "?", "[", "]", "/", "$", "_", "-", "~", "."]) +>
+    // Important: $, {, and } should not be part of WORD
+    <WORD: (["a"-"z", "A"-"Z", "0"-"9", "*", "?", "[", "]", "/", "_", "-", "~", "."]) +>
     | <SPACES: ([" ", "\t"]) +>
 }
 

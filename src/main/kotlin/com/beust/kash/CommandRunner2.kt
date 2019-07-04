@@ -105,6 +105,7 @@ class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
         return ProcessBuilder(findPath(sc.words)).also { pb ->
             if (sc.input != null) pb.redirectInput(File(sc.input))
             if (sc.output != null) pb.redirectOutput(File(sc.output))
+            pb.directory(File(context.directoryStack.peek()))
             //        if (sc.error != null) pb.redirectInput(File(sc.error))
         }
     }

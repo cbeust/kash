@@ -4,6 +4,7 @@ import com.beust.kash.parser.SimpleCmd
 import com.beust.kash.parser.SimpleCommand
 import com.beust.kash.word.KashWordParser
 import java.io.File
+import java.io.FileFilter
 import java.io.StringReader
 import java.nio.file.FileSystems
 import java.nio.file.Paths
@@ -41,17 +42,20 @@ class GlobTransformer(private val directoryStack: Stack<String>) : TokenTransfor
      * Only transform this command if one of the words contains a glob character.
      */
     override fun shouldTransform(command: SimpleCmd) : Boolean {
-        return command.content.any { it.toSet().intersect(GLOB_CHARACTERS).isEmpty() }
+        return command.content.any { it.toSet().intersect(GLOB_CHARACTERS).isNotEmpty() }
     }
 
-    override fun transform(words: List<String>): List<String> = words.flatMap { word ->
-        val pathMatcher = FileSystems.getDefault().getPathMatcher("glob:$word")
-        val files = File(directoryStack.peek()).listFiles()
-        val matches = files?.filter {
-            pathMatcher.matches(Paths.get(it.name))
+    override fun transform(words: List<String>): List<String> {
+        val result = words.flatMap { word ->
+            val pathMatcher = FileSystems.getDefault().getPathMatcher("glob:$word")
+            val dir = directoryStack.peek()
+            val files = File(dir).listFiles(FileFilter {
+                pathMatcher.matches(Paths.get(it.name))
+            })
+            if (files == null || files.isEmpty()) listOf(word)
+            else files.map { it.name }
         }
-        if (matches == null || matches.isEmpty()) listOf(word)
-        else matches.map { it.name }
+        return result
     }
 }
 
@@ -96,7 +100,7 @@ class EnvVariableTransformer(private val env: Map<String, String>): TokenTransfo
         val fragments = KashWordParser(StringReader(word)).ParsedWord()
         val result = fragments.map { fragment ->
             if (fragment.isWord) fragment.word
-                else env[fragment.word] ?: ""
+            else env[fragment.word] ?: ""
         }
         result.joinToString("")
     }
