@@ -2,6 +2,8 @@ package com.beust.kash
 
 import com.beust.kash.parser.*
 import com.beust.kash.parser.Command
+import com.beust.kash.word.KashWordParser
+import com.beust.kash.word.WordFragment
 import org.assertj.core.api.Assertions.assertThat
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -13,6 +15,23 @@ val idTransformer: TokenTransform = { word: Token.Word, s: List<String> -> s }
 class Parser3Test {
     private fun words(vararg s: String) = listOf(SimpleCmd(s.toList()))
     private fun words(s: List<String>) = listOf(SimpleCmd(s))
+
+    private fun word(s: String) = WordFragment(s, true)
+    private fun env(s: String) = WordFragment(s, false)
+
+    @DataProvider
+    fun wordDp() = arrayOf(
+            arrayOf("ab", listOf(word("ab"))),
+            arrayOf("ab \$var1", listOf(word("ab"), env("var1"))),
+            arrayOf("ab \${var1}", listOf(word("ab"), env("var1")))
+        )
+
+    @Test(dataProvider = "wordDp")
+    fun wordTest(line: String, expected: List<WordFragment>) {
+        val p = KashWordParser(StringReader(line))
+        val fragments = p.ParsedWord()
+        assertThat(fragments).isEqualTo(expected)
+    }
 
     @DataProvider
     fun singleCommandDp() = arrayOf(

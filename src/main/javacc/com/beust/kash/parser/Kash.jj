@@ -32,7 +32,16 @@ PARSER_END(KashParser)
 SKIP:  { " " | "\t" | "\n" | "\r" }
 TOKEN: {
     ";" | "&&" | "||"
-    | <WORD: (["-", "~", ".", "a"-"z", "A"-"Z", "0"-"9", "*", "?", "[", "]", "/", "$"]) +>
+    | <WORD: (["_", "-", "~", ".", "a"-"z", "A"-"Z", "0"-"9", "*", "?", "[", "]", "/", "$"]) +>
+    | <PWORD: (["a"-"z", "A"-"Z"]) +>
+}
+
+
+void ParsedWord(): {}
+{
+    (
+        <PWORD>
+    )+
 }
 
 CompoundList CompoundList():

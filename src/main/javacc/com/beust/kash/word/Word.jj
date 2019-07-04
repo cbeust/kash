@@ -1,0 +1,38 @@
+options {
+    STATIC = false;
+    DEBUG_PARSER = false;
+}
+
+PARSER_BEGIN(KashWordParser)
+package com.beust.kash.word;
+
+import java.util.List;
+import java.util.ArrayList;
+
+public class KashWordParser {
+}
+PARSER_END(KashWordParser)
+
+SKIP:  { " " | "\t" | "\n" | "\r" }
+TOKEN: {
+    ";" | "&&" | "||"
+    | <WORD: (["_", "-", "~", ".", "a"-"z", "A"-"Z", "0"-"9"]) +>
+}
+
+
+List<WordFragment> ParsedWord():
+{
+    Token w;
+    List<WordFragment> result = new ArrayList<WordFragment>();
+}
+{
+    (
+        w = <WORD> { result.add(new WordFragment(w.image, true)); }
+        | "$" w = <WORD> { result.add(new WordFragment(w.image, false)); }
+        | "${" w = <WORD> "}" { result.add(new WordFragment(w.image, false)); }
+    )+
+    {
+        return result;
+    }
+}
+
