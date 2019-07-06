@@ -5,6 +5,8 @@ import com.beust.kash.parser.SimpleList
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileReader
+import kotlin.math.min
+
 
 class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
         private val commandFinder: CommandFinder, private val context: KashContext) {
@@ -106,15 +108,50 @@ class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
             if (sc.input != null) pb.redirectInput(File(sc.input))
             if (sc.output != null) pb.redirectOutput(File(sc.output))
             pb.directory(File(context.directoryStack.peek()))
-            //        if (sc.error != null) pb.redirectInput(File(sc.error))
+//        if (sc.error != null) pb.redirectInput(File(sc.error))
         }
     }
 
     private fun launchSimpleCommand(sc: SimpleCommand): CommandResult {
+        fun isAlive(p: Process): Boolean {
+            return try {
+                p.exitValue()
+                false
+            } catch (e: IllegalThreadStateException) {
+                true
+            }
+        }
+
         val pb = simpleCommandToProcessBuilder(sc)
         log.debug("Launching " + pb.command().joinToString(" "))
 
         val process = pb.start()
+
+        val out = process.inputStream
+        val inStream = process.outputStream
+
+        val buffer = ByteArray(4000)
+        while (isAlive(process)) {
+            val no = out.available()
+            if (no > 0) {
+                val n = out.read(buffer, 0, min(no, buffer.size))
+                println(String(buffer, 0, n))
+            }
+
+            val ni = System.`in`.available()
+            if (ni > 0) {
+                val n = System.`in`.read(buffer, 0, min(ni, buffer.size))
+                inStream.write(buffer, 0, n)
+                inStream.flush()
+            }
+
+            try {
+                Thread.sleep(10)
+            } catch (e: InterruptedException) {
+            }
+
+        }
+
         val returnCode = process.waitFor()
         val stdout = Streams.readStream(process.inputStream)
         val stderr = Streams.readStream(process.errorStream)
