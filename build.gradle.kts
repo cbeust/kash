@@ -2,7 +2,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 buildscript {
-    val kotlinVer by extra { "1.3.40" }
+    val kotlinVer by extra { "1.3.41" }
 
     repositories {
         jcenter()
@@ -32,7 +32,7 @@ plugins {
     id("ca.coglinc.javacc") version "2.4.0"
 }
 
-val kotlinVer by extra { "1.3.40-eap-105" }
+val kotlinVer by extra { "1.3.41" }
 
 sourceSets {
     main {
