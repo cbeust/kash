@@ -32,7 +32,7 @@ PARSER_END(KashParser)
 SKIP:  { " " | "\t" | "\n" | "\r" }
 TOKEN: {
     ";" | "&&" | "||"
-    | <WORD: (["a"-"z", "A"-"Z", "0"-"9", "*", "?", "[", "]", "{", "}", "/", "$", "_", "-", "~", "."]) +>
+    | <WORD: (["a"-"z", "A"-"Z", "0"-"9", "*", "?", "[", "]", "{", "}", "/", "$", "_", "-", "~", ".", "@"]) +>
 
 }
 
@@ -53,12 +53,12 @@ CompoundList CompoundList():
 
 SimpleList SimpleList():
 {
-    List<PipeLineCommand> cs;
+    List<PipeLineCommand> cs = new ArrayList<PipeLineCommand>();
     boolean ampersand = false;
     SimpleList result;
 }
 {
-    (cs = SimpleList1()) ("&" { ampersand = true; })?
+    (cs = SimpleList1())? ("&" { ampersand = true; })?
     {
         return new SimpleList(cs, ampersand);
     }
@@ -129,8 +129,8 @@ SimpleCommand SimpleCommand():
         })*
     )
     {
-    return new SimpleCommand(simpleCmds, input, output);
-}
+        return new SimpleCommand(simpleCmds, input, output);
+    }
 }
 
 Command Command():
@@ -146,7 +146,7 @@ Command Command():
     ss = SubShell() { result = new Command(null, ss); }
     )
     {
-    return result;
+        return result;
     }
 }
 
