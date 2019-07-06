@@ -120,29 +120,33 @@ class Shell @Inject constructor(
         val result =
             try {
                 list = parser.SimpleList()
-                transform(list)
-                val plCommand = list.content[0]
-                val command = plCommand.content[0]
-                val simpleCommand = command.simpleCommand
-                if (simpleCommand != null) {
-                    val firstWord = simpleCommand.words[0]
-                    commandSearchResult = commandFinder.findCommand(firstWord)
-                    if (commandSearchResult == null) {
-                        runKotlin(line)
-                    } else {
-                        commandRunner2.runLine(line, list, commandSearchResult, inheritIo)
-                    }
-                } else {
-                    val shell2 = Shell(terminal, engine, context, builtins, executableFinder, scriptFinder,
-                            builtinFinder)
-                    val newLine = line.substring(line.indexOf("(") + 1,line.lastIndexOf(")"))
-                    if (list.ampersand) {
-                        Background.launchBackgroundCommand {
-                            shell2.runLine(newLine, inheritIo)
+                if (list.content.isNotEmpty()) {
+                    transform(list)
+                    val plCommand = list.content[0]
+                    val command = plCommand.content[0]
+                    val simpleCommand = command.simpleCommand
+                    if (simpleCommand != null) {
+                        val firstWord = simpleCommand.words[0]
+                        commandSearchResult = commandFinder.findCommand(firstWord)
+                        if (commandSearchResult == null) {
+                            runKotlin(line)
+                        } else {
+                            commandRunner2.runLine(line, list, commandSearchResult, inheritIo)
                         }
                     } else {
-                        shell2.runLine(newLine, inheritIo)
+                        val shell = Shell(terminal, engine, context, builtins, executableFinder, scriptFinder,
+                                builtinFinder)
+                        val newLine = line.substring(line.indexOf("(") + 1, line.lastIndexOf(")"))
+                        if (list.ampersand) {
+                            Background.launchBackgroundCommand {
+                                shell.runLine(newLine, inheritIo)
+                            }
+                        } else {
+                            shell.runLine(newLine, inheritIo)
+                        }
                     }
+                } else {
+                    CommandResult(0)
                 }
             } catch(ex: TokenMgrError) {
                 println("Exception: ${ex.message}")
