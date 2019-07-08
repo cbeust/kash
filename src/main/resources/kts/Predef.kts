@@ -41,4 +41,4 @@ fun currentDir() = Paths.get(pwd()).let { path ->
 
 fun myPrompt() = currentDir() + gitBranch() + "\u001B[32m$ "
 
-//prompt("`myPrompt()`")
+prompt("`myPrompt()`")
