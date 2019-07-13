@@ -13,6 +13,7 @@ import org.jline.terminal.Terminal
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileReader
+import java.io.InputStreamReader
 import java.io.StringReader
 import java.nio.file.Paths
 import java.util.*
@@ -37,8 +38,16 @@ class Shell @Inject constructor(
     private val directoryStack: Stack<String> get() = engine.directoryStack
     private val commandFinder: CommandFinder
     private val commandRunner2: CommandRunner2
+    private val PREDEF = "kts/Predef.kts"
 
     init {
+        //
+        // Read Predef
+        //
+        val predef = InputStreamReader(this::class.java.classLoader.getResource(PREDEF).openStream())
+        engine.eval(predef)
+        log.debug("Read $PREDEF")
+
         //
         // Read ~/.kash.kts
         //

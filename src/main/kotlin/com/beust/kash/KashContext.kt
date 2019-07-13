@@ -6,6 +6,8 @@ import java.util.*
 
 @Singleton
 class KashContext @Inject constructor(private val engine: Engine) {
+    val scriptPaths: List<String> get() = DotKashJsonReader.dotKash?.scriptPath ?: emptyList()
+
     val directoryStack: Stack<String>
         get() = synchronized(engine) {
             return engine.eval("Kash.DIRS") as Stack<String>
@@ -20,8 +22,6 @@ class KashContext @Inject constructor(private val engine: Engine) {
         get() = synchronized(engine) {
             return engine.eval("Kash.PATHS") as ArrayList<String>
         }
-
-    val scriptPaths = arrayListOf<String>()
 
     var prompt: String
         get() = synchronized(engine) { engine.eval("Kash.PROMPT") as String }
