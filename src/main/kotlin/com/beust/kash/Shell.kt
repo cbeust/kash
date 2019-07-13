@@ -17,10 +17,6 @@ import java.io.StringReader
 import java.nio.file.Paths
 import java.util.*
 
-interface LineRunner {
-    fun runLine(line: String, inheritIo: Boolean): CommandResult
-}
-
 @Suppress("PrivatePropertyName")
 @Singleton
 class Shell @Inject constructor(
