@@ -11,13 +11,14 @@ interface ICommandFinder {
     fun findCommand(word: String): CommandFinder.CommandSearchResult?
 }
 
-class ExecutableFinder @Inject constructor (private val paths: List<String>): ICommandFinder {
+class ExecutableFinder @Inject constructor(private val context: KashContext): ICommandFinder {
     /**
      * Need to introduce two implementations of this method: one for Windows and one for others.
      * For Windows, need to 1) look up commands that end with .exe, .cmd, .bat and 2) manually
      * add support for #! scripts.
      */
     override fun findCommand(word: String): CommandFinder.CommandSearchResult? {
+        val paths = context.paths
         // See if we can find this command on the path
         paths.forEach { path ->
             listOf("", ".exe", ".cmd").forEach { suffix ->
@@ -39,10 +40,11 @@ class ExecutableFinder @Inject constructor (private val paths: List<String>): IC
     }
 }
 
-class ScriptFinder @Inject constructor (private val scriptPath: List<String>): ICommandFinder {
+class ScriptFinder @Inject constructor (private val context: KashContext): ICommandFinder {
     private val log = LoggerFactory.getLogger(ScriptFinder::class.java)
 
     override fun findCommand(word: String): CommandFinder.CommandSearchResult? {
+        val scriptPath = context.scriptPaths
         // See if this is a .kash.kts script
         scriptPath.forEach { path ->
             val c1 =

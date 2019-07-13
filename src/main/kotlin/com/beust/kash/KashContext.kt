@@ -21,7 +21,7 @@ class KashContext @Inject constructor(private val engine: Engine) {
             return engine.eval("Kash.PATHS") as ArrayList<String>
         }
 
-    val scriptPath = arrayListOf<String>()
+    val scriptPaths = arrayListOf<String>()
 
     var prompt: String
         get() = synchronized(engine) { engine.eval("Kash.PROMPT") as String }

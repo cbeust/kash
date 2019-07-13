@@ -36,10 +36,11 @@ class KashModule() : AbstractModule() {
     private val PREDEF = "kts/Predef.kts"
 
     override fun configure() {
+        bind(Terminal::class.java).toInstance(TerminalBuilder.builder().build())
+
         val scriptEngine = ScriptEngineManager().getEngineByExtension("kash.kts")
                 ?: throw IllegalArgumentException("Couldn't find a script engine for .kash.kts")
 
-        bind(Terminal::class.java).toInstance(TerminalBuilder.builder().build())
         val engine = Engine(scriptEngine)
 
         //
@@ -53,10 +54,8 @@ class KashModule() : AbstractModule() {
         bind(Engine::class.java).toInstance(engine)
         val context = KashContext(engine)
         DotKashJsonReader.dotKash?.scriptPath?.let {
-            context.scriptPath.addAll(it)
+            context.scriptPaths.addAll(it)
         }
         bind(KashContext::class.java).toInstance(context)
-        bind(ExecutableFinder::class.java).toInstance(ExecutableFinder(context.paths))
-        bind(ScriptFinder::class.java).toInstance(ScriptFinder(context.scriptPath))
     }
 }
