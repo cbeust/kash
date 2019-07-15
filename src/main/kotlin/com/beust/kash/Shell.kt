@@ -94,9 +94,6 @@ class Shell @Inject constructor(
         }
     }
 
-    override fun runLine(line: String, inheritIo: Boolean): CommandResult {
-        return newParser(line, inheritIo)
-    }
 
     private fun runKotlin(line: String): CommandResult {
         log.debug("Detected Kotlin")
@@ -122,7 +119,7 @@ class Shell @Inject constructor(
         }
     }
 
-    private fun newParser(line: String, inheritIo: Boolean): CommandResult {
+    override fun runLine(line: String, inheritIo: Boolean): CommandResult {
         val parser = KashParser(StringReader(line))
         val list: SimpleList?
         val commandSearchResult: CommandFinder.CommandSearchResult?
