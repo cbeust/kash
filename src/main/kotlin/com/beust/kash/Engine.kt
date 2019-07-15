@@ -30,7 +30,13 @@ class Engine @Inject constructor(private val engine: ScriptEngine) {
 
     fun eval(script: String): Any? {
         setUpBindings()
-        return engine.eval(script)
+        try {
+            println(">>> EVAL $script")
+            return engine.eval(script)
+        } catch(ex: Exception) {
+            println("Couldn't evaluate $script: " + ex.message)
+            throw ex
+        }
     }
 
     val directoryStack: Stack<String>
