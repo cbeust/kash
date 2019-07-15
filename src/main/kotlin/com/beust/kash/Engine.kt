@@ -1,11 +1,13 @@
 package com.beust.kash
 
 import com.google.inject.Inject
+import com.google.inject.Singleton
 import java.io.Reader
 import java.util.*
 import javax.script.ScriptContext
 import javax.script.ScriptEngine
 
+@Singleton
 class Engine @Inject constructor(private val engine: ScriptEngine) {
     var lineRunner: LineRunner? = null
 
