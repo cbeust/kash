@@ -11,6 +11,10 @@ import java.util.*
 import javax.script.ScriptContext
 import javax.script.ScriptEngine
 
+/**
+ * Wrap a ScriptEngine and run additional things on the engine (such as running Predef.kts and
+ * reading ~/.kash.kts) so that it can evaluate Kash specific values.
+ */
 @Singleton
 class Engine @Inject constructor(private val engine: ScriptEngine) {
     private val log = LoggerFactory.getLogger(Engine::class.java)
@@ -18,25 +22,24 @@ class Engine @Inject constructor(private val engine: ScriptEngine) {
     var lineRunner: LineRunner? = null
 
     init {
-        val PREDEF = "kts/Predef.kts"
-
         //
-        // Read Predef
+        // Read Predef.kts
         //
-        val predef = InputStreamReader(this::class.java.classLoader.getResource(PREDEF).openStream())
+        val predef = InputStreamReader(this::class.java.classLoader.getResource("kts/Predef.kts").openStream())
         engine.eval(predef)
-        log.debug("Read $PREDEF")
+        log.debug("Read $predef")
 
-        val DOT_KASH_KTS = File(System.getProperty("user.home"), ".kash.kts")
         //
         // Read ~/.kash.kts
         //
-        if (DOT_KASH_KTS.exists()) {
-            try {
-                engine.eval(FileReader(DOT_KASH_KTS))
-                log.debug("Read $DOT_KASH_KTS")
-            } catch(ex: Exception) {
-                System.err.println("Errors found while reading $DOT_KASH_KTS: " + ex.message)
+        File(System.getProperty("user.home"), ".kash.kts").let { dotKash ->
+            if (dotKash.exists()) {
+                try {
+                    engine.eval(FileReader(dotKash))
+                    log.debug("Read $dotKash")
+                } catch (ex: Exception) {
+                    System.err.println("Errors found while reading $dotKash: " + ex.message)
+                }
             }
         }
 
