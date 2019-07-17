@@ -62,11 +62,12 @@ class GlobTransformer(private val directoryStack: Stack<String>) : TokenTransfor
 /**
  * Replace lines surrounded by backticks with their evaluation by the shell.
  */
-class BackTickTransformer(private val lineRunner: LineRunner): TokenTransformer {
+class BackTickTransformer(private val lineRunner: LineRunner, private val context: IKashContext)
+    : TokenTransformer {
     override fun shouldTransform(command: SimpleCmd) = command.surroundedBy == "`"
 
     override fun transform(words: List<String>): List<String> {
-        val r = lineRunner.runLine(words.joinToString(" "), inheritIo = false)
+        val r = lineRunner.runLine(words.joinToString(" "), context, inheritIo = false)
         val result =
             if (r.stdout != null) {
                 listOf(r.stdout.trim())

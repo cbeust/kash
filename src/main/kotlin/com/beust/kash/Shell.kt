@@ -12,8 +12,6 @@ import org.jline.reader.impl.completer.StringsCompleter
 import org.jline.terminal.Terminal
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.io.FileReader
-import java.io.InputStreamReader
 import java.io.StringReader
 import java.nio.file.Paths
 import java.util.*
@@ -23,7 +21,6 @@ import java.util.*
 class Shell @Inject constructor(
         private val terminal: Terminal,
         private val engine: Engine,
-        private val context: KashContext,
         private val builtins: Builtins,
         private val executableFinder: ExecutableFinder,
         private val scriptFinder: ScriptFinder,
@@ -31,34 +28,15 @@ class Shell @Inject constructor(
 
     private val log = LoggerFactory.getLogger(Shell::class.java)
 
-    private val DOT_KASH_KTS = File(System.getProperty("user.home"), ".kash.kts")
     private val KASH_STRINGS = listOf("Kash.ENV", "Kash.PATHS", "Kash.PROMPT", "Kash.DIRS")
 
     private val reader: LineReader
     private val directoryStack: Stack<String> get() = engine.directoryStack
     private val commandFinder: CommandFinder
     private val commandRunner2: CommandRunner2
-    private val PREDEF = "kts/Predef.kts"
 
     init {
-        //
-        // Read Predef
-        //
-        val predef = InputStreamReader(this::class.java.classLoader.getResource(PREDEF).openStream())
-        engine.eval(predef)
-        log.debug("Read $PREDEF")
-
-        //
-        // Read ~/.kash.kts
-        //
-        if (DOT_KASH_KTS.exists()) {
-            try {
-                engine.eval(FileReader(DOT_KASH_KTS))
-                log.debug("Read $DOT_KASH_KTS")
-            } catch(ex: Exception) {
-                System.err.println("Errors found while reading $DOT_KASH_KTS: " + ex.message)
-            }
-        }
+        val context = KashContext(engine)
 
         //
         // Configure the line reader with the tab completers
@@ -73,29 +51,20 @@ class Shell @Inject constructor(
         commandFinder = CommandFinder(listOf(builtinFinder, scriptFinder, executableFinder))
         commandRunner2 = CommandRunner2(builtins, engine, commandFinder, context)
 
-        // Copy the path
-        //
-        System.getenv("PATH").split(File.pathSeparator).forEach {
-            context.paths.add(it)
-        }
-
     }
 
     fun run() {
-        var line = reader.readLine(prompt())
+        val context = KashContext(engine)
+        var line = reader.readLine(prompt(context))
         while (line != null) {
             try {
-                val result = runLine(line, inheritIo = true)
+                val result = runLine(line, context, inheritIo = true)
                 result.display()
             } catch(ex: Exception) {
                 System.err.println(ex.message)
             }
-            line = reader.readLine(prompt())
+            line = reader.readLine(prompt(context))
         }
-    }
-
-    override fun runLine(line: String, inheritIo: Boolean): CommandResult {
-        return newParser(line, inheritIo)
     }
 
     private fun runKotlin(line: String): CommandResult {
@@ -122,7 +91,7 @@ class Shell @Inject constructor(
         }
     }
 
-    private fun newParser(line: String, inheritIo: Boolean): CommandResult {
+    override fun runLine(line: String, context: IKashContext, inheritIo: Boolean): CommandResult {
         val parser = KashParser(StringReader(line))
         val list: SimpleList?
         val commandSearchResult: CommandFinder.CommandSearchResult?
@@ -136,22 +105,22 @@ class Shell @Inject constructor(
                     val simpleCommand = command.simpleCommand
                     if (simpleCommand != null) {
                         val firstWord = simpleCommand.words[0]
-                        commandSearchResult = commandFinder.findCommand(firstWord)
+                        commandSearchResult = commandFinder.findCommand(firstWord, context)
                         if (commandSearchResult == null) {
                             runKotlin(line)
                         } else {
                             commandRunner2.runLine(line, list, commandSearchResult, inheritIo)
                         }
                     } else {
-                        val shell = Shell(terminal, engine, context, builtins, executableFinder, scriptFinder,
+                        val shell = Shell(terminal, engine, builtins, executableFinder, scriptFinder,
                                 builtinFinder)
                         val newLine = line.substring(line.indexOf("(") + 1, line.lastIndexOf(")"))
                         if (list.ampersand) {
                             Background.launchBackgroundCommand {
-                                shell.runLine(newLine, inheritIo)
+                                shell.runLine(newLine, context, inheritIo)
                             }
                         } else {
-                            shell.runLine(newLine, inheritIo)
+                            shell.runLine(newLine, context, inheritIo)
                         }
                     }
                 } else {
@@ -173,13 +142,13 @@ class Shell @Inject constructor(
         return result + dollar
     }
 
-    private fun prompt(): String {
+    private fun prompt(context: IKashContext): String {
         val p = engine.prompt
         return if (p.isBlank()) {
             defaultPrompt()
         } else {
             if (p.startsWith("`") && p.endsWith("`")) {
-                val cr = runLine(p.substring(1, p.length - 1), inheritIo = false)
+                val cr = runLine(p.substring(1, p.length - 1), context, inheritIo = false)
                 if (cr.returnCode == 0 && cr.stdout != null) {
                     cr.stdout
                 } else if (cr.returnCode != 0) {
@@ -196,8 +165,8 @@ class Shell @Inject constructor(
     private val tokenTransformers: List<TokenTransformer> = listOf(
             TildeTransformer(),
             GlobTransformer(directoryStack),
-            BackTickTransformer(this),
-            EnvVariableTransformer(context.env)
+            BackTickTransformer(this, KashContext(engine)),
+            EnvVariableTransformer(KashContext(engine).env)
     )
 
     private fun tokenTransformer2(command: SimpleCommand) {
