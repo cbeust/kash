@@ -74,9 +74,7 @@ abstract class ScriptDefinition(val jsr223Bindings: Bindings) : ScriptTemplateWi
         return withMyEngine {
             val lr = lineRunner
             val savedState = jsr223Bindings.remove(KOTLIN_SCRIPT_STATE_BINDINGS_KEY)
-            println("Creating context")
             val context = KashContext(Engine(myEngine!!))
-            println("... created context")
             val result = lr!!.runLine(line, context, true)
             savedState?.apply {
                 jsr223Bindings[KOTLIN_SCRIPT_STATE_BINDINGS_KEY] = savedState

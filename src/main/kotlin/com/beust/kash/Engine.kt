@@ -7,7 +7,6 @@ import java.io.File
 import java.io.FileReader
 import java.io.InputStreamReader
 import java.io.Reader
-import java.util.*
 import javax.script.ScriptContext
 import javax.script.ScriptEngine
 
@@ -42,13 +41,6 @@ class Engine @Inject constructor(private val engine: ScriptEngine) {
                 }
             }
         }
-
-        //
-        // Copy the path
-        //
-        System.getenv("PATH").split(File.pathSeparator).forEach {
-            paths.add(it)
-        }
     }
 
     companion object Engine {
@@ -75,24 +67,4 @@ class Engine @Inject constructor(private val engine: ScriptEngine) {
             throw ex
         }
     }
-
-    val directoryStack: Stack<String>
-        get() = synchronized(engine) {
-            return engine.eval("Kash.DIRS") as Stack<String>
-        }
-
-    val env: HashMap<String, String>
-        get() = synchronized(engine) {
-            return engine.eval("Kash.ENV") as HashMap<String, String>
-        }
-
-    val paths: ArrayList<String>
-        get() = synchronized(engine) {
-            return engine.eval("Kash.PATHS") as ArrayList<String>
-        }
-
-    var prompt: String
-        get() = synchronized(engine) { engine.eval("Kash.PROMPT") as String }
-        set(s) { synchronized(engine) { engine.eval("Kash.PROMPT = $s") } }
-
 }

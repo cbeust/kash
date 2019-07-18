@@ -12,9 +12,11 @@ interface IKashContext {
 }
 
 class KashContext @Inject constructor(engine: Engine): IKashContext {
+    private val kashObject = KashObject(engine)
+
     override val scriptPaths: List<String> get() = DotKashJsonReader.dotKash?.scriptPath ?: emptyList()
-    override val directoryStack = engine.eval("Kash.DIRS") as Stack<String>
-    override val env = engine.eval("Kash.ENV") as HashMap<String, String>
-    override val paths = engine.eval("Kash.PATHS") as ArrayList<String>
-    override val prompt = engine.eval("Kash.PROMPT") as String
+    override val paths = kashObject.paths
+    override val env = kashObject.env
+    override val prompt = kashObject.prompt
+    override val directoryStack = kashObject.directoryStack
 }

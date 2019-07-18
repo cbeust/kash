@@ -21,6 +21,7 @@ import java.util.*
 class Shell @Inject constructor(
         private val terminal: Terminal,
         private val engine: Engine,
+        private val kashObject: KashObject,
         private val builtins: Builtins,
         private val executableFinder: ExecutableFinder,
         private val scriptFinder: ScriptFinder,
@@ -31,7 +32,7 @@ class Shell @Inject constructor(
     private val KASH_STRINGS = listOf("Kash.ENV", "Kash.PATHS", "Kash.PROMPT", "Kash.DIRS")
 
     private val reader: LineReader
-    private val directoryStack: Stack<String> get() = engine.directoryStack
+    private val directoryStack: Stack<String> get() = kashObject.directoryStack
     private val commandFinder: CommandFinder
     private val commandRunner2: CommandRunner2
 
@@ -112,7 +113,7 @@ class Shell @Inject constructor(
                             commandRunner2.runLine(line, list, commandSearchResult, inheritIo)
                         }
                     } else {
-                        val shell = Shell(terminal, engine, builtins, executableFinder, scriptFinder,
+                        val shell = Shell(terminal, engine, kashObject, builtins, executableFinder, scriptFinder,
                                 builtinFinder)
                         val newLine = line.substring(line.indexOf("(") + 1, line.lastIndexOf(")"))
                         if (list.ampersand) {
@@ -143,7 +144,7 @@ class Shell @Inject constructor(
     }
 
     private fun prompt(context: IKashContext): String {
-        val p = engine.prompt
+        val p = kashObject.prompt
         return if (p.isBlank()) {
             defaultPrompt()
         } else {

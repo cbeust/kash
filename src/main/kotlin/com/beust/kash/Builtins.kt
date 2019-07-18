@@ -8,9 +8,8 @@ import java.io.FileReader
 import java.util.*
 import kotlin.reflect.KFunction1
 
-
-
 class Builtins @Inject constructor(private val context: KashContext,
+        private val kashObject: KashObject,
         private val engine: Engine,
         private val executableFinder: ExecutableFinder) {
     val commands: HashMap<String, KFunction1<List<String>, CommandResult>> = hashMapOf(
@@ -30,7 +29,7 @@ class Builtins @Inject constructor(private val context: KashContext,
     }
 
     private fun env(words: List<String>): CommandResult {
-        val r = engine.env
+        val r = kashObject.env
         return CommandResult(0, r.toString(), null)
     }
 

@@ -8,6 +8,8 @@ object Kash {
     val ENV = hashMapOf<String, String>()
     var PROMPT: String = ""
     val DIRS = Stack<String>()
+
+    fun dump() = arrayOf(PATHS, ENV, PROMPT, DIRS)
 }
 
 fun path(vararg p: String) = p.forEach { Kash.PATHS.add(it) }
