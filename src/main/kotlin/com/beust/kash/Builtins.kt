@@ -35,7 +35,7 @@ class Builtins @Inject constructor(private val context: KashContext,
     }
 
     private fun which(words: List<String>): CommandResult {
-        val commandResult = executableFinder.findCommand(words[1])
+        val commandResult = executableFinder.findCommand(words[1], context)
         val command = commandResult?.path
 
         if (command != null) {

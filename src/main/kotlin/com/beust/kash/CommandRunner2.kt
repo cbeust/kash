@@ -9,7 +9,7 @@ import kotlin.math.min
 
 
 class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
-        private val commandFinder: CommandFinder, private val context: KashContext) {
+        private val commandFinder: CommandFinder, private val context: IKashContext) {
     private val log = LoggerFactory.getLogger(CommandRunner2::class.java)
 
     fun runLine(line: String, command: SimpleList?, commandSearchResult: CommandFinder.CommandSearchResult,
@@ -159,7 +159,7 @@ class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
     }
 
     private fun findPath(words: List<String>): List<String>? {
-        val commandResult = commandFinder.findCommand(words[0])
+        val commandResult = commandFinder.findCommand(words[0], context)
         val pathCommand = commandResult?.path
         val result = listOf(pathCommand) + words.subList(1, words.size)
         val result2 = result.map { it!!.replace('/', File.separatorChar) }

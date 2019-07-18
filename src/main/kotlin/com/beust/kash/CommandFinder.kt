@@ -8,16 +8,16 @@ import java.io.FileReader
 enum class CommandType { COMMAND, SCRIPT, BUILT_IN, OTHER }
 
 interface ICommandFinder {
-    fun findCommand(word: String): CommandFinder.CommandSearchResult?
+    fun findCommand(word: String, context: IKashContext): CommandFinder.CommandSearchResult?
 }
 
-class ExecutableFinder @Inject constructor(private val context: KashContext): ICommandFinder {
+class ExecutableFinder: ICommandFinder {
     /**
      * Need to introduce two implementations of this method: one for Windows and one for others.
      * For Windows, need to 1) look up commands that end with .exe, .cmd, .bat and 2) manually
      * add support for #! scripts.
      */
-    override fun findCommand(word: String): CommandFinder.CommandSearchResult? {
+    override fun findCommand(word: String, context: IKashContext): CommandFinder.CommandSearchResult? {
         val paths = context.paths
         // See if we can find this command on the path
         paths.forEach { path ->
@@ -40,10 +40,10 @@ class ExecutableFinder @Inject constructor(private val context: KashContext): IC
     }
 }
 
-class ScriptFinder @Inject constructor (private val context: KashContext): ICommandFinder {
+class ScriptFinder: ICommandFinder {
     private val log = LoggerFactory.getLogger(ScriptFinder::class.java)
 
-    override fun findCommand(word: String): CommandFinder.CommandSearchResult? {
+    override fun findCommand(word: String, context: IKashContext): CommandFinder.CommandSearchResult? {
         val scriptPath = context.scriptPaths
         // See if this is a .kash.kts script
         scriptPath.forEach { path ->
@@ -62,7 +62,7 @@ class ScriptFinder @Inject constructor (private val context: KashContext): IComm
 }
 
 class BuiltinFinder @Inject constructor (private val builtins: Builtins): ICommandFinder {
-    override fun findCommand(word: String) =
+    override fun findCommand(word: String, context: IKashContext) =
         if (builtins.commands[word] != null) {
             CommandFinder.CommandSearchResult(CommandType.BUILT_IN, word)
         } else {
@@ -76,7 +76,7 @@ class CommandFinder(private val finders: List<ICommandFinder>): ICommandFinder {
      */
     class CommandSearchResult(val type: CommandType, val path: String)
 
-    override fun findCommand(word: String): CommandSearchResult? {
-        return finders.mapNotNull { it.findCommand(word) }.firstOrNull()
+    override fun findCommand(word: String, context: IKashContext): CommandSearchResult? {
+        return finders.mapNotNull { it.findCommand(word, context) }.firstOrNull()
     }
 }

@@ -16,9 +16,14 @@ class ScriptEngineProvider @Inject constructor(): Provider<ScriptEngine> {
     }
 }
 
+class KashContextProvider @Inject constructor(private val engine: Engine): Provider<IKashContext> {
+    override fun get() = KashContext(engine)
+}
+
 class KashModule() : AbstractModule() {
     override fun configure() {
         bind(Terminal::class.java).toInstance(TerminalBuilder.builder().build())
         bind(ScriptEngine::class.java).toProvider(ScriptEngineProvider::class.java).`in`(Singleton::class.java)
+        bind(IKashContext::class.java).toProvider(KashContextProvider::class.java)
     }
 }

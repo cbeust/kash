@@ -2,14 +2,54 @@ package com.beust.kash
 
 import com.google.inject.Inject
 import com.google.inject.Singleton
+import org.slf4j.LoggerFactory
+import java.io.File
+import java.io.FileReader
+import java.io.InputStreamReader
 import java.io.Reader
 import java.util.*
 import javax.script.ScriptContext
 import javax.script.ScriptEngine
 
+/**
+ * Wrap a ScriptEngine and run additional things on the engine (such as running Predef.kts and
+ * reading ~/.kash.kts) so that it can evaluate Kash specific values.
+ */
 @Singleton
 class Engine @Inject constructor(private val engine: ScriptEngine) {
+    private val log = LoggerFactory.getLogger(Engine::class.java)
+
     var lineRunner: LineRunner? = null
+
+    init {
+        //
+        // Read Predef.kts
+        //
+        val predef = InputStreamReader(this::class.java.classLoader.getResource("kts/Predef.kts").openStream())
+        engine.eval(predef)
+        log.debug("Read $predef")
+
+        //
+        // Read ~/.kash.kts
+        //
+        File(System.getProperty("user.home"), ".kash.kts").let { dotKash ->
+            if (dotKash.exists()) {
+                try {
+                    engine.eval(FileReader(dotKash))
+                    log.debug("Read $dotKash")
+                } catch (ex: Exception) {
+                    System.err.println("Errors found while reading $dotKash: " + ex.message)
+                }
+            }
+        }
+
+        //
+        // Copy the path
+        //
+        System.getenv("PATH").split(File.pathSeparator).forEach {
+            paths.add(it)
+        }
+    }
 
     companion object Engine {
         const val ARGS = "args"
@@ -22,15 +62,18 @@ class Engine @Inject constructor(private val engine: ScriptEngine) {
         engine.getBindings(ScriptContext.ENGINE_SCOPE)[LINE_RUNNER] = lineRunner
     }
 
-    fun eval(script: Reader, args: List<String> = emptyList()): Any? {
-        setUpBindings(args)
-        val result = engine.eval(script)
-        return result
+    fun eval(script: Reader, args: List<String> = emptyList()) = setUpBindings(args).also {
+        engine.eval(script)
     }
 
     fun eval(script: String): Any? {
         setUpBindings()
-        return engine.eval(script)
+        try {
+            return engine.eval(script)
+        } catch(ex: Exception) {
+            System.err.println("Couldn't evaluate $script: " + ex.message)
+            throw ex
+        }
     }
 
     val directoryStack: Stack<String>
