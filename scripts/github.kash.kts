@@ -1,8 +1,8 @@
-@file:org.jetbrains.kotlin.script.util.DependsOn("org.kohsuke:github-api:1.95")
-
 /**
  * Demonstrate a Kash script depending on an external Maven dependency.
  */
+
+@file:org.jetbrains.kotlin.script.util.DependsOn("org.kohsuke:github-api:1.95")
 
 import org.kohsuke.github.GitHub
 

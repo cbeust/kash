@@ -143,6 +143,24 @@ Mon Jun 03 21:39:29 PDT 2019$
 
 See the [.kash.kts](#.kash.kts) section for a more complex prompt implementation.
 
+### os()
+
+The `os()` function is defined as follows:
+
+```kotlin
+fun os(line: String): CommandResult?
+```
+
+It lets you launch an operating system command and capture its output in [`CommandResult`](https://github.com/cbeust/kash/blob/master/src/main/kotlin/com/beust/kash/CommandResult.kt) instance, which is returned. This allows you to process the output of executables in Kotlin:
+
+```
+$ os("ls")?.stdout?.toUpperCase()
+BUILD
+BUILD.GRADLE.KTS
+GRADLE
+GRADLEW
+```
+
 ### .kash.kts
 
 A file called `~/.kash.kts` in the user's home directory will automatically be read by Kash when starting, allowing users to define their own functions and environment. For example, here is how to create a prompt that contains the current directory in short form followed by the current git branch, if in a Git directory:
@@ -201,17 +219,17 @@ Kash can be configured with two different files: `~/.kash.json`  and `~/.kash.kt
 
 This file is a JSON file that lets you configure Kash with a few parameters:
 
-- `classPath`:  An array of strings pointing to the classpath that Kash will be started with.
-- `scriptPath`: An array of strings pointing to directories where scripts are located.
+- `classPaths`:  An array of strings pointing to the classpath that Kash will be started with.
+- `scriptPaths`: An array of strings pointing to directories where scripts are located.
 
 Here is a sample `~/.kash.json`:
 
 ```json
 {
-    "classPath": [
+    "classPaths": [
         "~/build/classes"
     ],
-    "scriptPath": [
+    "scriptPaths": [
         "~/kash-scripts"
     ]
 }
@@ -289,8 +307,40 @@ root
 $
 ```
 
-Of course, you can also put this file on your `scriptPath` and then just invoke it with `log`.
+Of course, you can also put this file on your `scriptPaths` and then just invoke it with `log`.
 
+Here is another example of a script witha Maven dependency that uses a Github library:
+
+```kotlin
+/**
+ * Demonstrate a Kash script depending on an external Maven dependency.
+ */
+
+@file:org.jetbrains.kotlin.script.util.DependsOn("org.kohsuke:github-api:1.95")
+
+import org.kohsuke.github.GitHub
+
+fun github(name: String = "cbeust/kash") {
+    val github = GitHub.connectAnonymously()
+    val repo = github.getRepository(name)
+    println("Repo: " + repo.name + ": " + repo.description)
+}
+
+if (args.isEmpty()) {
+    github()
+} else {
+    github(args[0])
+}
+```
+
+Put this file in `~/kash-scripts/github.kash.kts` and run it:
+
+```
+$ github
+kash: A shell powered by Kotlin
+$ github cbeust/klaxon
+klaxon: A JSON parser for Kotlin
+```
 
 # Community
 
