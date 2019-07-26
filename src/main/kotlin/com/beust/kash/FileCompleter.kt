@@ -11,9 +11,8 @@ class FileCompleter(private val directoryStack: Stack<String>) : Completer {
     override fun complete(reader: LineReader, line: ParsedLine, candidates: MutableList<Candidate>) {
         val word = line.words().last().replace("\\", "/")
         val last = word.lastIndexOf("/")
-        val dirAtCursor = if (last != -1) word.substring(0, last) else word
-        val patternAtCursor = if (last != -1) word.substring(last + 1) else word
-        val dirAtCursorFile = File(Tilde.expand(dirAtCursor))
+        val (dirAtCursor, patternAtCursor) = Strings.dirAndFile(word, directoryStack.peek())
+        val dirAtCursorFile = File(Tilde.expand(dirAtCursor!!))
         val (dir, accept) =
             if (dirAtCursorFile.exists() && dirAtCursorFile.isDirectory) {
                 Pair(dirAtCursorFile, { s: String -> s.startsWith(patternAtCursor) })

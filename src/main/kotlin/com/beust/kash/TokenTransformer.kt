@@ -47,13 +47,15 @@ class GlobTransformer(private val directoryStack: Stack<String>) : TokenTransfor
 
     override fun transform(words: List<String>): List<String> {
         val result = words.flatMap { word ->
-            val pathMatcher = FileSystems.getDefault().getPathMatcher("glob:$word")
             val dir = directoryStack.peek()
-            val files = File(dir).listFiles(FileFilter {
+            val (d, file) = Strings.dirAndFile(word, dir)
+
+            val pathMatcher = FileSystems.getDefault().getPathMatcher("glob:$file")
+            val files = File(d).listFiles(FileFilter {
                 pathMatcher.matches(Paths.get(it.name))
             })
             if (files == null || files.isEmpty()) listOf(word)
-            else files.map { it.name }
+            else files.map { it.absolutePath }
         }
         return result
     }
