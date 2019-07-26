@@ -4,28 +4,29 @@ import org.jline.reader.Candidate
 import org.jline.reader.Completer
 import org.jline.reader.LineReader
 import org.jline.reader.ParsedLine
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.*
 
 class FileCompleter(private val directoryStack: Stack<String>) : Completer {
-    private val log = LoggerFactory.getLogger(FileCompleter::class.java)
-
     override fun complete(reader: LineReader, line: ParsedLine, candidates: MutableList<Candidate>) {
-        val word = line.words().last()
-        val dirAtCursor = File(Tilde.expand(line.word()))
-        val (dir, accept) = if (dirAtCursor.exists() && dirAtCursor.isDirectory) {
-            Pair(dirAtCursor, { s: String -> true })
-        } else {
-            Pair(File(directoryStack.peek()), { s: String -> s.startsWith(word) })
-        }
-
-        log.debug("Completing at dir $dir")
+        val word = line.words().last().replace("\\", "/")
+        val last = word.lastIndexOf("/")
+        val dirAtCursor = if (last != -1) word.substring(0, last) else word
+        val patternAtCursor = if (last != -1) word.substring(last + 1) else word
+        val dirAtCursorFile = File(Tilde.expand(dirAtCursor))
+        val (dir, accept) =
+            if (dirAtCursorFile.exists() && dirAtCursorFile.isDirectory) {
+                Pair(dirAtCursorFile, { s: String -> s.startsWith(patternAtCursor) })
+            } else {
+                Pair(File(directoryStack.peek()), { s: String -> s.startsWith(word) })
+            }
 
         dir.list().filter {
-            accept(word)
+            accept(it)
         }.forEach {
-            candidates.add(Candidate(it + (if (File(it).isDirectory) "/" else "")))
+            val cs = if (last != -1) "$dirAtCursor/$it" else it
+            val cand = if (File(cs).isDirectory) "$cs/" else cs
+            candidates.add(Candidate(cand))
         }
     }
 }
