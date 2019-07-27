@@ -15,7 +15,7 @@ PARSER_END(KashWordParser)
 
 TOKEN: {
     // Important: $, {, and } should not be part of WORD
-    <WORD: (["a"-"z", "A"-"Z", "0"-"9", "*", "?", "[", "]", "/", "_", "-", "~", ".", "@", ":"]) +>
+    <WORD: (["a"-"z", "A"-"Z", "0"-"9", "*", "?", "[", "]", "/", "\\", "_", "-", "~", ".", "@", ":"]) +>
     | <SPACES: ([" ", "\t"]) +>
 }
 
