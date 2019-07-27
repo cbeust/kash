@@ -1,6 +1,13 @@
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
+val kashVersion = "0.9"
+val kashJarBase = "kash-$kashVersion"
+
+allprojects {
+    version = kashVersion
+}
+
 buildscript {
     val kotlinVer by extra { "1.3.41" }
 
@@ -30,6 +37,7 @@ plugins {
     id("org.jetbrains.kotlin.jvm") version "1.3.40-eap-105"
     id("com.github.johnrengelman.shadow") version "4.0.2"
     id("ca.coglinc.javacc") version "2.4.0"
+    id("com.github.breadmoirai.github-release") version "2.2.9"
 }
 
 val kotlinVer by extra { "1.3.41" }
@@ -69,7 +77,7 @@ application {
 
 val shadowJar = tasks {
     named<ShadowJar>("shadowJar") {
-        archiveBaseName.set("kash-fat")
+        archiveBaseName.set(kashJarBase)
         mergeServiceFiles()
     }
 }
@@ -77,4 +85,62 @@ val shadowJar = tasks {
 // Disable standard jar task to avoid building non-shadow jars
 val jar by tasks.getting {
     enabled = false
+}
+
+//
+// Release stuff. To create and upload the distribution to Github releases:
+// ./gradlew dist
+//
+
+tasks.register("createScript") {
+    dependsOn("assemble")
+    File("$buildDir/release").apply {
+        mkdirs()
+        File(this, "kash").apply {
+            writeText("java -jar $kashJarBase.jar")
+            setExecutable(true)
+        }
+    }
+}
+
+tasks.register<Copy>("copyKash") {
+    dependsOn("assemble")
+    from("$buildDir/libs")
+    into("$buildDir/release")
+    include("*.jar")
+}
+
+// Defined in ~/.gradle/gradle.properties
+val githubToken: String by project
+
+githubRelease {
+    token(githubToken)
+    owner("cbeust")
+    repo("kash")
+    overwrite(true)
+    releaseAssets("$buildDir/dist/kash-$kashVersion.zip")
+
+// tagName("some tag")
+// e.g. release notes
+//    body("This is the body")
+}
+
+tasks.register<Zip>("dist") {
+    // Create the script and copy the files to build/dist
+    dependsOn("createScript")
+    dependsOn("copyKash")
+
+    // Create zip file from build/dist
+    archiveFileName.set("kash-$kashVersion.zip")
+    File("$buildDir/dist").apply {
+        mkdirs()
+        destinationDirectory.set(this)
+    }
+
+    from("$buildDir/release") {
+        include("*")
+    }
+
+    // Upload to github releases
+    dependsOn("githubRelease")
 }
