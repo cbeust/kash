@@ -110,11 +110,9 @@ tasks.register<Copy>("copyKash") {
     include("*.jar")
 }
 
-// Defined in ~/.gradle/gradle.properties
-val githubToken: String by project
-
 githubRelease {
-    token(githubToken)
+    // Defined in ~/.gradle/gradle.properties
+    token(project.findProperty("githubToken")?.toString())
     owner("cbeust")
     repo("kash")
     overwrite(true)
