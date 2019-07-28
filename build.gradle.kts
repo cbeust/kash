@@ -91,11 +91,12 @@ val jar by tasks.getting {
 // Update the scripts "run" and "kash" to use the correct jar file (which changes depending on the version number)
 // This should only be run when the version number changes.
 tasks.register("updateScripts") {
-    listOf("run" to "./gradlew shadowJar && java -jar build/libs/",
-            "kash" to "java -Dorg.slf4j.simpleLogger.defaultLogLevel=info -jar build/libs/")
+    listOf("run" to "./gradlew shadowJar && java",
+            "kash" to "java -Dorg.slf4j.simpleLogger.defaultLogLevel=info",
+            "kash-debug" to "java -Droot-level=DEBUG")
         .forEach { pair ->
             File(pair.first).apply {
-                writeText(pair.second + kashJar + "\n")
+                writeText(pair.second + " -jar build/libs/$kashJar" + "\n")
             }
         }
 }
