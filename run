@@ -1,3 +1,1 @@
-#!/bin/sh
-
-./gradlew shadowJar && java -jar build/libs/kash-fat.jar
+./gradlew shadowJar && java -jar build/libs/kash-1.7.jar

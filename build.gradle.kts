@@ -2,7 +2,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val kashVersion = File("version.txt").readText().trim()
-val kashJarBase = "kash-$kashVersion"
+val kashJarBase = "kash"
 
 allprojects {
     version = kashVersion
@@ -87,6 +87,22 @@ val jar by tasks.getting {
     enabled = false
 }
 
+// Update the scripts "run" and "kash" to use the correct jar file (which changes depending on the version number)
+tasks.register("updateScripts") {
+    listOf("run" to "./gradlew shadowJar && java -jar build/libs/",
+            "kash" to "java -Dorg.slf4j.simpleLogger.defaultLogLevel=info -jar build/libs/")
+        .forEach { pair ->
+            File(pair.first).apply {
+                writeText(pair.second + kashJarBase + "-" + kashVersion + ".jar\n")
+            }
+        }
+}
+
+tasks {
+    withType<Assemble> {
+        finalizedBy("updateScripts")
+    }
+}
 //
 // Release stuff. To create and upload the distribution to Github releases:
 // ./gradlew zip  // create the release zip file

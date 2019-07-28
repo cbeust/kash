@@ -1,3 +1,1 @@
-#!/bin/sh
-
-java -Dorg.slf4j.simpleLogger.defaultLogLevel=info -jar build/libs/kash-fat.jar
+java -Dorg.slf4j.simpleLogger.defaultLogLevel=info -jar build/libs/kash-1.7.jar
