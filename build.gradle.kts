@@ -3,6 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val kashVersion = File("version.txt").readText().trim()
 val kashJarBase = "kash"
+val kashJar = "$kashJarBase-$kashVersion.jar"
 
 allprojects {
     version = kashVersion
@@ -88,12 +89,13 @@ val jar by tasks.getting {
 }
 
 // Update the scripts "run" and "kash" to use the correct jar file (which changes depending on the version number)
+// This should only be run when the version number changes.
 tasks.register("updateScripts") {
     listOf("run" to "./gradlew shadowJar && java -jar build/libs/",
             "kash" to "java -Dorg.slf4j.simpleLogger.defaultLogLevel=info -jar build/libs/")
         .forEach { pair ->
             File(pair.first).apply {
-                writeText(pair.second + kashJarBase + "-" + kashVersion + ".jar\n")
+                writeText(pair.second + kashJar + "\n")
             }
         }
 }
@@ -103,10 +105,11 @@ tasks {
         finalizedBy("updateScripts")
     }
 }
+
 //
 // Release stuff. To create and upload the distribution to Github releases:
-// ./gradlew zip  // create the release zip file
-// ./gradlew dist // upload the release to github
+// ./gradlew dist  // create the release zip file (build/dist/kash-xxx.zip)
+// ./gradlew upload // upload the release to github
 //
 
 tasks.register("createScript") {
@@ -114,7 +117,7 @@ tasks.register("createScript") {
     File("$buildDir/release").apply {
         mkdirs()
         File(this, "kash").apply {
-            writeText("java -jar $kashJarBase.jar")
+            writeText("java -jar $kashJar")
             setExecutable(true)
         }
     }
@@ -122,9 +125,13 @@ tasks.register("createScript") {
 
 tasks.register<Copy>("copyKash") {
     dependsOn("assemble")
-    from("$buildDir/libs")
+    from("$buildDir/libs") {
+        include("*.jar")
+    }
+    File("$buildDir/release", "kash").apply {
+        writeText("java -jar $kashJar\n")
+    }
     into("$buildDir/release")
-    include("*.jar")
 }
 
 githubRelease {
@@ -141,7 +148,7 @@ githubRelease {
 }
 
 // Create the zip file for release
-tasks.register<Zip>("zip") {
+tasks.register<Zip>("dist") {
     // Create the script and copy the files to build/dist
     dependsOn("createScript")
     dependsOn("copyKash")
@@ -159,7 +166,7 @@ tasks.register<Zip>("zip") {
 }
 
 // Upload to github releases
-tasks.register("dist") {
+tasks.register("upload") {
     dependsOn("zip")
     dependsOn("githubRelease")
 }
