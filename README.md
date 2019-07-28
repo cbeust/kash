@@ -4,17 +4,19 @@
 
 Kash is a shell written in and powered by Kotlin.
 
-The philosophy of Kash is to provide a minimal layer of compatibility with existing shells and then allow the user to write scripts in Kotlin for anything that requires more logic. This document is split in two parts:
+The philosophy of Kash is to provide a minimal layer of compatibility with existing shells and then allow the user to write scripts in Kotlin for anything that requires more logic.
+
+This document is split in two parts:
 
 1. [Kash's shell compabitility layer](#kash-as-a-shell)
 2. [Kash and Kotlin](#kash-and-kotlin)
 
 # Running Kash
 
-- Kash requires Java 1.11 or higher (Java 1.8 will soon be added)
-- Download the [latest release of Kash](https://github.com/cbeust/kash/releases/latest)
-- Unzip the zip file into your `bin` directory
-- Run `kash`
+- Kash requires Java 1.11 or higher (Java 1.8 will soon be added).
+- Download the [latest release of Kash](https://github.com/cbeust/kash/releases/latest).
+- Unzip the zip file into your `bin` directory.
+- Run `kash`.
 
 # Kash as a shell
 
