@@ -11,6 +11,7 @@ The philosophy of Kash is to provide a minimal layer of compatibility with exist
 
 # Running Kash
 
+- Kash requires Java 1.11 or higher (Java 1.8 will soon be added)
 - Download the [latest release of Kash](https://github.com/cbeust/kash/releases/latest)
 - Unzip the zip file into your `bin` directory
 - Run `kash`
