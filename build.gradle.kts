@@ -167,6 +167,6 @@ tasks.register<Zip>("dist") {
 
 // Upload to github releases
 tasks.register("upload") {
-    dependsOn("zip")
+    dependsOn("dist")
     dependsOn("githubRelease")
 }
