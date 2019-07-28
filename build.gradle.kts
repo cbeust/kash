@@ -1,7 +1,7 @@
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-val kashVersion = "0.9"
+val kashVersion = File("version.txt").readText().trim()
 val kashJarBase = "kash-$kashVersion"
 
 allprojects {
@@ -89,7 +89,8 @@ val jar by tasks.getting {
 
 //
 // Release stuff. To create and upload the distribution to Github releases:
-// ./gradlew dist
+// ./gradlew zip  // create the release zip file
+// ./gradlew dist // upload the release to github
 //
 
 tasks.register("createScript") {
@@ -123,7 +124,8 @@ githubRelease {
 //    body("This is the body")
 }
 
-tasks.register<Zip>("dist") {
+// Create the zip file for release
+tasks.register<Zip>("zip") {
     // Create the script and copy the files to build/dist
     dependsOn("createScript")
     dependsOn("copyKash")
@@ -138,7 +140,10 @@ tasks.register<Zip>("dist") {
     from("$buildDir/release") {
         include("*")
     }
+}
 
-    // Upload to github releases
+// Upload to github releases
+tasks.register("dist") {
+    dependsOn("zip")
     dependsOn("githubRelease")
 }
