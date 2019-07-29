@@ -109,7 +109,7 @@ tasks {
 
 //
 // Release stuff. To create and upload the distribution to Github releases:
-// ./gradlew kashDist  // create the release zip file (build/dist/kash-xxx.zip)
+// ./gradlew kashDist  // create the release zip file (build/distributions/kash-{version}.zip)
 // ./gradlew upload // upload the release to github
 //
 
@@ -131,8 +131,8 @@ githubRelease {
 listOf("distZip", "shadowDistZip").forEach { tasks[it].enabled = false }
 
 distributions {
-    // Create a task smallDistZip, which in turn will generate kash-small-x.zip. Then rename
-    // that zip file to kash-x.zip.
+    // Create a task smallDistZip, which in turn will generate kash-small-{version}.zip. Then rename
+    // that zip file to kash-{version}.zip.
     create("small") {
         contents {
             into("/")
