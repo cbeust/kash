@@ -136,7 +136,7 @@ distributions {
     create("small") {
         contents {
             into("/")
-            from("$buildDir/scripts") {
+            from("$buildDir/kashScripts") {
                 include("*")
             }
             from("$buildDir/libs") {
@@ -146,12 +146,29 @@ distributions {
     }
 }
 
+tasks["smallDistZip"].dependsOn("createScript")
+
+tasks.register("createScript") {
+    doLast{
+        println(">>> CREATESCRIPT")
+        File("$buildDir/kashScripts").apply {
+            mkdirs()
+            File(absolutePath, "kash").apply {
+                writeText("java -jar kash-$kashVersion.jar $*\n")
+                setExecutable(true)
+            }
+        }
+    }
+}
+
 tasks.register("kashDist") {
     dependsOn("assemble")
     dependsOn("smallDistZip")
     doLast {
+        val file = "$buildDir/distributions/kash-$kashVersion.zip"
         File("$buildDir/distributions/kash-small-$kashVersion.zip")
-                .renameTo(File("$buildDir/distributions/kash-$kashVersion.zip"))
+                .renameTo(File(file))
+        println("Created $file")
     }
 }
 
