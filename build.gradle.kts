@@ -56,6 +56,7 @@ dependencies {
             "ch.qos.logback:logback-classic:1.3.0-alpha4",
             "com.google.inject:guice:4.2.2",
             "me.sargunvohra.lib:CakeParse:1.0.7",
+            "com.beust:jcommander:1.72",
             "org.apache.ivy:ivy:2.4.0")
         .forEach { compile(it) }
 
@@ -150,7 +151,6 @@ tasks["smallDistZip"].dependsOn("createScript")
 
 tasks.register("createScript") {
     doLast{
-        println(">>> CREATESCRIPT")
         File("$buildDir/kashScripts").apply {
             mkdirs()
             File(absolutePath, "kash").apply {

@@ -1,11 +1,24 @@
 package com.beust.kash
 
+import com.beust.jcommander.JCommander
+import com.beust.jcommander.Parameter
 import com.google.inject.Guice
 import org.jetbrains.kotlin.cli.common.environment.setIdeaIoUseFallback
 import java.io.IOException
 
+class Args {
+    @Parameter(names = [ "--ping"])
+    var ping: Boolean = false
+}
+
 fun main(argv: Array<String>) {
-    Main().run()
+    val args = Args()
+    JCommander.newBuilder().addObject(args).build().parse(*argv)
+    if (args.ping) {
+        println("pong")
+    } else {
+        Main().run()
+    }
 }
 
 class Main {

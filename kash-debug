@@ -1,1 +1,1 @@
-java -Droot-level=DEBUG -jar build/libs/kash-1.8.jar
+java -Droot-level=DEBUG -jar build/libs/kash-1.9.jar
