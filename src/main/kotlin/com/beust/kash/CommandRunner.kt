@@ -8,9 +8,9 @@ import java.io.FileReader
 import kotlin.math.min
 
 
-class CommandRunner2(private val builtins: Builtins, private val engine: Engine,
+class CommandRunner(private val builtins: Builtins, private val engine: Engine,
         private val commandFinder: CommandFinder, private val context: IKashContext) {
-    private val log = LoggerFactory.getLogger(CommandRunner2::class.java)
+    private val log = LoggerFactory.getLogger(CommandRunner::class.java)
 
     fun runLine(line: String, command: SimpleList?, commandSearchResult: CommandFinder.CommandSearchResult,
             inheritIo: Boolean): CommandResult {

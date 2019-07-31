@@ -34,7 +34,7 @@ class Shell @Inject constructor(
     private val reader: LineReader
     private val directoryStack: Stack<String> get() = kashObject.directoryStack
     private val commandFinder: CommandFinder
-    private val commandRunner2: CommandRunner2
+    private val commandRunner: CommandRunner
 
     init {
         val context = KashContext(engine)
@@ -50,7 +50,7 @@ class Shell @Inject constructor(
                 .build()
         directoryStack.push(File(".").absoluteFile.canonicalPath)
         commandFinder = CommandFinder(listOf(builtinFinder, scriptFinder, executableFinder))
-        commandRunner2 = CommandRunner2(builtins, engine, commandFinder, context)
+        commandRunner = CommandRunner(builtins, engine, commandFinder, context)
 
     }
 
@@ -110,7 +110,7 @@ class Shell @Inject constructor(
                         if (commandSearchResult == null) {
                             runKotlin(line)
                         } else {
-                            commandRunner2.runLine(line, list, commandSearchResult, inheritIo)
+                            commandRunner.runLine(line, list, commandSearchResult, inheritIo)
                         }
                     } else {
                         val shell = Shell(terminal, engine, kashObject, builtins, executableFinder, scriptFinder,
