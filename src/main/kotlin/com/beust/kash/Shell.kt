@@ -104,8 +104,12 @@ class Shell @Inject constructor(
                     transform(list)
                     val plCommand = list.content[0]
                     val command = plCommand.content[0]
+                    //
+                    // Either it's a simple command or a subshell (surrounded by parentheses)
+                    //
                     val simpleCommand = command.simpleCommand
                     if (simpleCommand != null) {
+                        // Simple command
                         val firstWord = simpleCommand.words[0]
                         commandSearchResult = commandFinder.findCommand(firstWord, context)
                         if (commandSearchResult == null) {
@@ -114,6 +118,7 @@ class Shell @Inject constructor(
                             commandRunner.runLine(line, list, commandSearchResult, inheritIo)
                         }
                     } else {
+                        // Subshell, create a new Shell and run that command in it
                         val shell = Shell(terminal, engine, kashObject, builtins, executableFinder, scriptFinder,
                                 builtinFinder)
                         val newLine = line.substring(line.indexOf("(") + 1, line.lastIndexOf(")"))
