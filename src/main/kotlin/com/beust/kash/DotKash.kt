@@ -19,10 +19,11 @@ object DotKashJsonReader {
 }
 
 class DotKash(
-        @Json(name = "classPaths") val _classPath: List<String> = listOf(),
-        @Json(name = "scriptPaths") val _scriptPath: List<String> = listOf()) {
-    val scriptPath: List<String>
-        get() = _scriptPath.map { Tilde.expand(it) }
-    val classPath: List<String>
-        get() = _classPath.map { Tilde.expand(it) }
+    @Json(name = "classPaths") val _classPath: List<String> = listOf(),
+    @Json(name = "scriptPaths") val _scriptPath: List<String> = listOf(),
+    @Json(name = "completers") val _completers: List<String> = listOf()
+) {
+    val scriptPath: List<String> get() = _scriptPath.map { Tilde.expand(it) }
+    val classPath: List<String> get() = _classPath.map { Tilde.expand(it) }
+    val completers: List<String> get() = _completers.map { Tilde.expand(it) }
 }

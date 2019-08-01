@@ -46,6 +46,7 @@ class Shell @Inject constructor(
                 .completer(StringsCompleter(builtins.commands.keys))
                 .completer(StringsCompleter(KASH_STRINGS))
                 .completer(FileCompleter(directoryStack))
+                .completer(ExternalCompleter(context, engine))
                 .terminal(terminal)
                 .build()
         directoryStack.push(File(".").absoluteFile.canonicalPath)

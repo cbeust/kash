@@ -54,14 +54,14 @@ class Engine @Inject constructor(private val engine: ScriptEngine) {
         engine.getBindings(ScriptContext.ENGINE_SCOPE)[LINE_RUNNER] = lineRunner
     }
 
-    fun eval(script: Reader, args: List<String> = emptyList()) = setUpBindings(args).also {
+    fun eval(script: Reader, args: List<String> = emptyList()) = setUpBindings(args).run {
         engine.eval(script)
     }
 
     fun eval(script: String): Any? {
         setUpBindings()
         try {
-            return engine.eval(script)
+            engine.eval(script)
         } catch(ex: Exception) {
             System.err.println("Couldn't evaluate $script: " + ex.message)
             throw ex
