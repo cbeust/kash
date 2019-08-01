@@ -67,7 +67,10 @@ class ScriptFinder: ICommandFinder {
             val c1 =
                     if (word.startsWith(".") || word.startsWith("/")) word
                     else path + File.separatorChar + word
-            val file = File("$c1.kash.kts")
+            val file = File(
+                    if (c1.endsWith("kash.kts")) c1
+                    else "$c1.kash.kts"
+            )
             if (file.exists() and file.isFile) {
                 log.debug("Found script: " + file.absolutePath)
                 return CommandFinder.CommandSearchResult(CommandType.SCRIPT, file.absolutePath)
