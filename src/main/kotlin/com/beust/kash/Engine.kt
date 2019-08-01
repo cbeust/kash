@@ -61,7 +61,7 @@ class Engine @Inject constructor(private val engine: ScriptEngine) {
     fun eval(script: String): Any? {
         setUpBindings()
         try {
-            engine.eval(script)
+            return engine.eval(script)
         } catch(ex: Exception) {
             System.err.println("Couldn't evaluate $script: " + ex.message)
             throw ex
