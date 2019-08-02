@@ -31,7 +31,7 @@ class ExternalCompleter(private val context: KashContext, val engine: Engine): C
                 val cs = engine.eval(FileReader(result.path), listOf(line.line(), line.cursor().toString()))
                     as List<String>
                 cs.forEach { candidate ->
-                    candidates.add(Candidate(candidate))
+                    candidates.add(Candidate(candidate, candidate, it, null, null, null, true))
                 }
             } else {
                 System.err.println("\nWARNING: Couldn't find tab completer $it")
