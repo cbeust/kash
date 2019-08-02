@@ -1,1 +1,1 @@
-java -Dorg.slf4j.simpleLogger.defaultLogLevel=info -jar build/libs/kash-1.11.jar
+java -Dorg.slf4j.simpleLogger.defaultLogLevel=info -jar build/libs/kash-1.12.jar
