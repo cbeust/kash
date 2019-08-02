@@ -92,7 +92,7 @@ class CommandRunner(private val builtins: Builtins, private val engine: Engine,
                     simpleCommandToProcessBuilder(it.simpleCommand)
                 }
                 val r = ProcessBuilder.startPipeline(builders)
-                r[r.size - 1].let { lastProcess ->
+                r[r.size - 1].let { lastProcess: Process ->
                     val output = Streams.readStream(lastProcess.inputStream)
                     val error = Streams.readStream(lastProcess.errorStream)
                     result = CommandResult(0, output, error)
