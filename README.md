@@ -314,7 +314,8 @@ val result = if (args.size == 2) gitComplete(args[0], args[1].toInt())
 result
 ```
 
-Next, you declare your completer in `~/.kash.json`:
+Save this file as `~/kash-scripts/gitCompleter.kash.kts` and then add the following to your `~/.kash.json`:
+
 ```json
 {
     "scriptPaths": [
