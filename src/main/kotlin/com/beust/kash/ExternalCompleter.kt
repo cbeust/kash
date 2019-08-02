@@ -4,7 +4,6 @@ import org.jline.reader.Candidate
 import org.jline.reader.Completer
 import org.jline.reader.LineReader
 import org.jline.reader.ParsedLine
-import org.slf4j.LoggerFactory
 import java.io.FileReader
 
 /**
@@ -23,8 +22,6 @@ import java.io.FileReader
  */
 @Suppress("UNCHECKED_CAST")
 class ExternalCompleter(private val context: KashContext, val engine: Engine): Completer {
-    private val log = LoggerFactory.getLogger(ExternalCompleter::class.java)
-
     override fun complete(reader: LineReader?, line: ParsedLine, candidates: MutableList<Candidate>) {
         val completers = DotKashJsonReader.dotKash?.completers
         val finder = ScriptFinder()
@@ -37,7 +34,7 @@ class ExternalCompleter(private val context: KashContext, val engine: Engine): C
                     candidates.add(Candidate(candidate))
                 }
             } else {
-                log.warn("Couldn't find tab completer $it")
+                System.err.println("\nWARNING: Couldn't find tab completer $it")
             }
         }
     }

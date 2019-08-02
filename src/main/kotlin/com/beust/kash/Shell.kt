@@ -42,17 +42,18 @@ class Shell @Inject constructor(
         //
         // Configure the line reader with the tab completers
         //
-        reader = LineReaderBuilder.builder()
+        val builder = LineReaderBuilder.builder()
                 .completer(StringsCompleter(builtins.commands.keys))
                 .completer(StringsCompleter(KASH_STRINGS))
                 .completer(FileCompleter(directoryStack))
-                .completer(ExternalCompleter(context, engine))
                 .terminal(terminal)
-                .build()
+        if (DotKashJsonReader.dotKash?.completers?.isNotEmpty() == true) {
+            builder.completer(ExternalCompleter(context, engine))
+        }
+        reader = builder.build()
         directoryStack.push(File(".").absoluteFile.canonicalPath)
         commandFinder = CommandFinder(listOf(builtinFinder, scriptFinder, executableFinder))
         commandRunner = CommandRunner(builtins, engine, commandFinder, context)
-
     }
 
     fun run() {
