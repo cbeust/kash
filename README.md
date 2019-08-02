@@ -229,6 +229,9 @@ Here is a sample `~/.kash.json`:
     ],
     "scriptPaths": [
         "~/kash-scripts"
+    ],
+    "completers": [
+        "gitCompleter.kash.kts"    
     ]
 }
 ```
@@ -281,6 +284,55 @@ Hello, Unknown
 $ hi("Cedric")
 Hello, Cedric
 $
+```
+
+## Writing a Tab completer
+
+You can add your own Tab completers by writing simple Kash scripts. Tab completers are regular Kash scripts
+that receive the following parameters:
+
+- `args[0]` (`String`): the entire line typed so far
+- `args[1]` (`Int`): the position of the cursor
+
+Your tab completer is expected to return a `List<String>` with the completion candidates, or an empty list
+if no completions are available.
+
+Here is a simple `git` completer as an example:
+
+```kotlin
+// ~/kash-scripts/gitCompleter.kash.kts
+
+fun gitComplete(line: String, cursorIndex: Int): List<String> {
+    val words = line.split(" ")
+    if (words[0] == "git") return listOf("commit", "status")
+    else return emptyList()
+}
+
+val result = if (args.size == 2) gitComplete(args[0], args[1].toInt())
+    else emptyList()
+
+result
+```
+
+Next, you declare your completer in `~/.kash.json`:
+```json
+{
+    "scriptPaths": [
+         "~/kash-scripts"
+    ],
+    "completers": [
+        "gitCompleter.kash.kts"
+    ]
+}
+```
+
+Tab completers are searched in all the directories defined in your `scriptPaths` configuration value.
+
+Once Kash is started with this configuration, you can test it as follows:
+
+```
+$ git <TAB>
+commit status
 ```
 
 ## Kash additions
