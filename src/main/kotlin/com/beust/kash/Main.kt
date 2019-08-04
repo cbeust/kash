@@ -4,6 +4,7 @@ import com.beust.jcommander.JCommander
 import com.beust.jcommander.Parameter
 import com.google.inject.Guice
 import org.jetbrains.kotlin.cli.common.environment.setIdeaIoUseFallback
+import java.io.BufferedInputStream
 import java.io.IOException
 
 class Args {
@@ -23,6 +24,17 @@ fun main(argv: Array<String>) {
 
 class Main {
     fun run() {
+        val versionStream = this::class.java.classLoader.getResource("version.txt").openStream()
+        val version = BufferedInputStream(versionStream).bufferedReader().readLine()
+        print("""  _  __        _   _     
+ | |/ / __ _  | | | |__  
+ | ' / / _` |/ __)| '_ \ 
+ | . \| (_| |\__ \| | | |
+ |_|\_\\__,_|(   /|_| |_| $version
+              |_|
+
+
+        """.trimIndent())
         System.setProperty("org.jline.terminal.dumb", "true")
         setIdeaIoUseFallback()
         try {
