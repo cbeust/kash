@@ -24,6 +24,10 @@ buildscript {
     }
 }
 
+java {
+    sourceCompatibility = JavaVersion.toVersion("11")
+}
+
 repositories {
     jcenter()
     mavenCentral()
