@@ -8,6 +8,7 @@ import com.google.inject.Inject
 import com.google.inject.Singleton
 import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
+import org.jline.reader.impl.completer.AggregateCompleter
 import org.jline.reader.impl.completer.StringsCompleter
 import org.jline.terminal.Terminal
 import org.slf4j.LoggerFactory
@@ -38,18 +39,22 @@ class Shell @Inject constructor(
 
     init {
         val context = KashContext(engine)
+        val completers = arrayListOf(
+                StringsCompleter(builtins.commands.keys),
+                StringsCompleter(KASH_STRINGS),
+                FileCompleter(directoryStack)
+        )
+        if (DotKashJsonReader.dotKash?.completers?.isNotEmpty() == true) {
+            completers.add(ExternalCompleter(context, engine))
+        }
 
         //
         // Configure the line reader with the tab completers
         //
+
         val builder = LineReaderBuilder.builder()
-                .completer(StringsCompleter(builtins.commands.keys))
-                .completer(StringsCompleter(KASH_STRINGS))
-                .completer(FileCompleter(directoryStack))
+                .completer(AggregateCompleter(completers))
                 .terminal(terminal)
-        if (DotKashJsonReader.dotKash?.completers?.isNotEmpty() == true) {
-            builder.completer(ExternalCompleter(context, engine))
-        }
         reader = builder.build()
         directoryStack.push(File(".").absoluteFile.canonicalPath)
         commandFinder = CommandFinder(listOf(builtinFinder, scriptFinder, executableFinder))
