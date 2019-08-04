@@ -1,7 +1,7 @@
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-val kashVersion = File("version.txt").readText().trim()
+val kashVersion = File("src/main/resources/version.txt").readText().trim()
 val kashJarBase = "kash"
 val kashJar = "$kashJarBase-$kashVersion.jar"
 
