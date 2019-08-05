@@ -2,40 +2,74 @@ package com.beust.kash
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
+import com.beust.kash.api.Builtin
+import com.beust.kash.parser.SimpleList
 import com.google.inject.Inject
+import com.google.inject.Singleton
 import java.io.File
 import java.io.FileReader
-import java.util.*
-import kotlin.reflect.KFunction1
+import kotlin.reflect.KCallable
+import kotlin.reflect.KClass
 
+class LaunchableBuiltin(val instance: Any, val name: String, val lambda: KCallable<CommandResult>)
+
+@Singleton
 class Builtins @Inject constructor(private val context: KashContext,
         private val kashObject: KashObject,
         private val engine: Engine,
-        private val executableFinder: ExecutableFinder) {
-    val commands: HashMap<String, KFunction1<List<String>, CommandResult>> = hashMapOf(
-            "cd" to ::cd,
-            "pwd" to ::pwd,
-            "." to ::dot,
-            "env" to ::env,
-            "which" to ::which,
-            "log" to ::log
-    )
+        private val executableFinder: ExecutableFinder): ICommandFinder {
 
-    private fun log(words: List<String>): CommandResult {
+    val builtinMap  = findBuiltIns(Builtins::class)
+
+    /**
+     * Look up all the functions annotated with @Builtin on the given class.
+     */
+    private fun findBuiltIns(cls: KClass<*>): Map<String, LaunchableBuiltin> {
+        val result = cls.members.map { it to it.annotations }
+                .filter { it.second.isNotEmpty() }
+                .map { Pair(it.first as KCallable<CommandResult>, it.second.first()) }
+                .filter { it.second is Builtin }
+                .map {
+                    val bi = it.second as Builtin
+                    val name = if (bi.value == "") it.first.name else bi.value
+                    Pair(name, LaunchableBuiltin(this, name, it.first))
+                }
+                .toMap()
+        return result
+    }
+
+    override fun findCommand(word: String, list: SimpleList?, context: IKashContext): CommandFinder.CommandSearchResult? {
+        val launchableBuiltin = builtinMap[word]
+        val result =
+            if (launchableBuiltin != null) {
+                val words = list!!.toWords()
+                val bi = launchableBuiltin.lambda
+                val callable = { bi.call(launchableBuiltin.instance, words) }
+                CommandFinder.CommandSearchResult(word, callable)
+            } else {
+                null
+            }
+        return result
+    }
+
+    @Builtin
+    fun log(words: List<String>): CommandResult {
         val root = org.slf4j.LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
         if (root.level == Level.DEBUG) root.level = Level.OFF
             else root.level = Level.DEBUG
         return CommandResult(0)
     }
 
-    private fun env(words: List<String>): CommandResult {
+    @Builtin
+    fun env(words: List<String>): CommandResult {
         val r = kashObject.env
         return CommandResult(0, r.toString(), null)
     }
 
-    private fun which(words: List<String>): CommandResult {
-        val commandResult = executableFinder.findCommand(words[1], context)
-        val command = commandResult?.path
+    @Builtin
+    fun which(words: List<String>): CommandResult {
+        val commandResult = executableFinder.findCommand(words[1], null, context)
+        val command = commandResult?._path
 
         if (command != null) {
             return CommandResult(0, command)
@@ -44,14 +78,16 @@ class Builtins @Inject constructor(private val context: KashContext,
         }
     }
 
-    private fun dot(words: List<String>): CommandResult {
+    @Builtin(".")
+    fun dot(words: List<String>): CommandResult {
         println("Running script " + words[1])
         val r = engine.eval(FileReader(File(words[1])), words.subList(2, words.size))
 
         return CommandResult(0)
     }
 
-    private fun cd(words: List<String>): CommandResult {
+    @Builtin
+    fun cd(words: List<String>): CommandResult {
         if (words.size == 1) return CommandResult(0)
 
         val stack = context.directoryStack
@@ -80,7 +116,8 @@ class Builtins @Inject constructor(private val context: KashContext,
         return CommandResult(rc)
     }
 
-    private fun pwd(words: List<String>): CommandResult {
+    @Builtin
+    fun pwd(words: List<String>): CommandResult {
         val stdout =
             if (context.directoryStack.isEmpty()) {
                 File(".").toString()

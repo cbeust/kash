@@ -25,8 +25,7 @@ class Shell @Inject constructor(
         private val kashObject: KashObject,
         private val builtins: Builtins,
         private val executableFinder: ExecutableFinder,
-        private val scriptFinder: ScriptFinder,
-        private val builtinFinder: BuiltinFinder) : LineRunner {
+        private val scriptFinder: ScriptFinder) : LineRunner {
 
     private val log = LoggerFactory.getLogger(Shell::class.java)
 
@@ -35,12 +34,11 @@ class Shell @Inject constructor(
     private val reader: LineReader
     private val directoryStack: Stack<String> get() = kashObject.directoryStack
     private val commandFinder: CommandFinder
-    private val commandRunner: CommandRunner
 
     init {
         val context = KashContext(engine)
         val completers = arrayListOf(
-                StringsCompleter(builtins.commands.keys),
+                StringsCompleter(builtins.builtinMap.keys),
                 StringsCompleter(KASH_STRINGS),
                 FileCompleter(directoryStack)
         )
@@ -57,8 +55,7 @@ class Shell @Inject constructor(
                 .terminal(terminal)
         reader = builder.build()
         directoryStack.push(File(".").absoluteFile.canonicalPath)
-        commandFinder = CommandFinder(listOf(builtinFinder, scriptFinder, executableFinder))
-        commandRunner = CommandRunner(builtins, engine, commandFinder, context)
+        commandFinder = CommandFinder(listOf(builtins, scriptFinder, executableFinder))
     }
 
     fun run() {
@@ -117,16 +114,15 @@ class Shell @Inject constructor(
                     if (simpleCommand != null) {
                         // Simple command
                         val firstWord = simpleCommand.words[0]
-                        commandSearchResult = commandFinder.findCommand(firstWord, context)
+                        commandSearchResult = commandFinder.findCommand(firstWord, list, context)
                         if (commandSearchResult == null) {
                             runKotlin(line)
                         } else {
-                            commandRunner.runLine(line, list, commandSearchResult, inheritIo)
+                            commandSearchResult.lambda()
                         }
                     } else {
                         // Subshell, create a new Shell and run that command in it
-                        val shell = Shell(terminal, engine, kashObject, builtins, executableFinder, scriptFinder,
-                                builtinFinder)
+                        val shell = Shell(terminal, engine, kashObject, builtins, executableFinder, scriptFinder)
                         val newLine = line.substring(line.indexOf("(") + 1, line.lastIndexOf(")"))
                         if (list.ampersand) {
                             Background.launchBackgroundCommand {
@@ -140,7 +136,6 @@ class Shell @Inject constructor(
                     CommandResult(0)
                 }
             } catch(ex: TokenMgrError) {
-                println("Exception: ${ex.message}")
                 runKotlin(line)
             }
         return result

@@ -24,11 +24,11 @@ import java.io.FileReader
 class ExternalCompleter(private val context: KashContext, val engine: Engine): Completer {
     override fun complete(reader: LineReader?, line: ParsedLine, candidates: MutableList<Candidate>) {
         val completers = DotKashJsonReader.dotKash?.completers
-        val finder = ScriptFinder()
+        val finder = ScriptFinder(engine)
         completers?.forEach {
-            val result = finder.findCommand(it, context)
+            val result = finder.findCommand(it, null, context)
             if (result != null) {
-                val cs = engine.eval(FileReader(result.path), listOf(line.line(), line.cursor().toString()))
+                val cs = engine.eval(FileReader(result._path), listOf(line.line(), line.cursor().toString()))
                     as List<String>
                 cs.forEach { candidate ->
                     val group = it.substring(0, it.length - ".kash.kts".length)
