@@ -31,6 +31,7 @@ class Shell @Inject constructor(
 
     private val KASH_STRINGS = listOf("Kash.ENV", "Kash.PATHS", "Kash.PROMPT", "Kash.DIRS")
 
+    private val builtinFinder = BuiltinFinder(listOf(builtins))
     private val reader: LineReader
     private val directoryStack: Stack<String> get() = kashObject.directoryStack
     private val commandFinder: CommandFinder
@@ -38,7 +39,7 @@ class Shell @Inject constructor(
     init {
         val context = KashContext(engine)
         val completers = arrayListOf(
-                StringsCompleter(builtins.builtinMap.keys),
+                StringsCompleter(builtinFinder.builtinMap.keys),
                 StringsCompleter(KASH_STRINGS),
                 FileCompleter(directoryStack)
         )
@@ -55,7 +56,7 @@ class Shell @Inject constructor(
                 .terminal(terminal)
         reader = builder.build()
         directoryStack.push(File(".").absoluteFile.canonicalPath)
-        commandFinder = CommandFinder(listOf(builtins, scriptFinder, executableFinder))
+        commandFinder = CommandFinder(listOf(builtinFinder, scriptFinder, executableFinder))
     }
 
     fun run() {
