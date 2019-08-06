@@ -6,6 +6,7 @@ import com.beust.kash.parser.SimpleList
 import com.beust.kash.parser.TokenMgrError
 import com.google.inject.Inject
 import com.google.inject.Singleton
+import org.jline.reader.Completer
 import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.impl.completer.AggregateCompleter
@@ -31,21 +32,32 @@ class Shell @Inject constructor(
 
     private val KASH_STRINGS = listOf("Kash.ENV", "Kash.PATHS", "Kash.PROMPT", "Kash.DIRS")
 
-    private val builtinFinder = BuiltinFinder(listOf(builtins))
+    private val builtinFinder: BuiltinFinder
     private val reader: LineReader
     private val directoryStack: Stack<String> get() = kashObject.directoryStack
     private val commandFinder: CommandFinder
 
     init {
         val context = KashContext(engine)
-        val completers = arrayListOf(
+
+        val completers = arrayListOf<Completer>()
+        val extensions = arrayListOf<String>()
+
+        val dotKash = DotKashJsonReader.dotKash
+        if (dotKash != null) {
+            if (dotKash.completers.isNotEmpty()) {
+                completers.add(ExternalCompleter(context, engine))
+            }
+            extensions.addAll(dotKash.extensions)
+        }
+
+        builtinFinder = BuiltinFinder(listOf(builtins), extensions)
+
+        completers.addAll(listOf(
                 StringsCompleter(builtinFinder.builtinMap.keys),
                 StringsCompleter(KASH_STRINGS),
-                FileCompleter(directoryStack)
+                FileCompleter(directoryStack))
         )
-        if (DotKashJsonReader.dotKash?.completers?.isNotEmpty() == true) {
-            completers.add(ExternalCompleter(context, engine))
-        }
 
         //
         // Configure the line reader with the tab completers

@@ -13,7 +13,7 @@ class Builtins @Inject constructor(private val context: KashContext,
         private val executableFinder: ExecutableFinder)
 {
     @Builtin
-    fun log(words: List<String>): CommandResult {
+    fun log(words: List<String>, context: IKashContext): CommandResult {
         val root = org.slf4j.LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
         if (root.level == Level.DEBUG) root.level = Level.OFF
         else root.level = Level.DEBUG
@@ -21,13 +21,13 @@ class Builtins @Inject constructor(private val context: KashContext,
     }
 
     @Builtin
-    fun env(words: List<String>): CommandResult {
+    fun env(words: List<String>, context: IKashContext): CommandResult {
         val r = kashObject.env
         return CommandResult(0, r.toString(), null)
     }
 
     @Builtin
-    fun which(words: List<String>): CommandResult {
+    fun which(words: List<String>, context: IKashContext): CommandResult {
         val commandResult = executableFinder.findCommand(words[1], null, context)
         val command = commandResult?._path
 
@@ -39,7 +39,7 @@ class Builtins @Inject constructor(private val context: KashContext,
     }
 
     @Builtin(".")
-    fun dot(words: List<String>): CommandResult {
+    fun dot(words: List<String>, context: IKashContext): CommandResult {
         println("Running script " + words[1])
         val r = engine.eval(FileReader(File(words[1])), words.subList(2, words.size))
 
@@ -47,7 +47,7 @@ class Builtins @Inject constructor(private val context: KashContext,
     }
 
     @Builtin
-    fun cd(words: List<String>): CommandResult {
+    fun cd(words: List<String>, context: IKashContext): CommandResult {
         if (words.size == 1) return CommandResult(0)
 
         val stack = context.directoryStack
@@ -77,7 +77,7 @@ class Builtins @Inject constructor(private val context: KashContext,
     }
 
     @Builtin
-    fun pwd(words: List<String>): CommandResult {
+    fun pwd(words: List<String>, context: IKashContext): CommandResult {
         val stdout =
                 if (context.directoryStack.isEmpty()) {
                     File(".").toString()
