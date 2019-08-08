@@ -151,6 +151,15 @@ distributions {
     }
 }
 
+tasks.register<Jar>("apiJar") {
+    println("apiJar: $buildDir/classes/kotlin/main/com/beust/kash/api")
+    archiveClassifier.set("api")
+    from("$buildDir/classes/kotlin/main") {
+        include("/com/beust/kash/api/*")
+    }
+}
+
+tasks["assemble"].finalizedBy("apiJar")
 tasks["smallDistZip"].dependsOn("createScript")
 
 tasks.register("createScript") {
