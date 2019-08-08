@@ -1,5 +1,6 @@
 package com.beust.kash
 
+import com.beust.kash.api.IKashContext
 import com.beust.kash.parser.SimpleList
 
 class CommandFinder(private val finders: List<ICommandFinder>): ICommandFinder {

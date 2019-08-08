@@ -3,6 +3,7 @@ package com.beust.kash
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import com.beust.kash.api.Builtin
+import com.beust.kash.api.IKashContext
 import com.google.inject.Inject
 import java.io.File
 import java.io.FileReader

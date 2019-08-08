@@ -1,6 +1,7 @@
 package com.beust.kash
 
 import com.beust.kash.api.Builtin
+import com.beust.kash.api.IKashContext
 import com.beust.kash.parser.SimpleList
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
@@ -36,6 +37,8 @@ class BuiltinFinder(instances: List<Any>, classNames: List<String>): ICommandFin
         }
     /**
      * Look up all the functions annotated with @Builtin on the given class.
+     * @return a map where the keys are the name of the builtin and the value is a launchable
+     * version of that built-in, including the instance on which to invoke that function.
      */
     private fun findBuiltins(cls: KClass<*>, instance: Any): Map<String, LaunchableBuiltin> {
         val result = cls.members
@@ -72,9 +75,9 @@ class BuiltinFinder(instances: List<Any>, classNames: List<String>): ICommandFin
 //        if (function.parameters[1].type.classifier != kotlin.collections.Collection<String>::class) {
 //            error("'s parameter #2 should be of type List<String>")
 //        }
-        if (function.parameters[2].type.classifier != IKashContext::class) {
-            error("'s parameter #2 should be of type IKashContext")
-        }
+//        if (function.parameters[2].type.classifier != IKashContext::class) {
+//            error("'s parameter #2 should be of type IKashContext")
+//        }
     }
 
     override fun findCommand(word: String, list: SimpleList?, context: IKashContext): CommandFinder.CommandSearchResult? {

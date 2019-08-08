@@ -1,5 +1,6 @@
 package com.beust.kash
 
+import com.beust.kash.api.IKashContext
 import com.beust.kash.parser.SimpleCommand
 import com.beust.kash.parser.SimpleList
 import org.slf4j.LoggerFactory

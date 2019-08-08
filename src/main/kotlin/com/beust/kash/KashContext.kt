@@ -1,15 +1,7 @@
 package com.beust.kash
 
+import com.beust.kash.api.IKashContext
 import com.google.inject.Inject
-import java.util.*
-
-interface IKashContext {
-    val directoryStack: Stack<String>
-    val env: HashMap<String, String>
-    val paths: ArrayList<String>
-    val scriptPaths: List<String>
-    val prompt: String
-}
 
 class KashContext @Inject constructor(engine: Engine): IKashContext {
     private val kashObject = KashObject(engine)

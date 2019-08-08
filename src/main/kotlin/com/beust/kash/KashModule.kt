@@ -1,5 +1,6 @@
 package com.beust.kash
 
+import com.beust.kash.api.IKashContext
 import com.google.inject.AbstractModule
 import com.google.inject.Inject
 import com.google.inject.Provider
