@@ -6,7 +6,9 @@ val kashJarBase = "kash"
 val kashJar = "$kashJarBase-$kashVersion.jar"
 
 allprojects {
+    group = "com.beust.kash"
     version = kashVersion
+    apply<MavenPublishPlugin>()
 }
 
 buildscript {
@@ -37,12 +39,15 @@ repositories {
 
 plugins {
     java
+    "java-library"
+    "maven-publish"
     application
     idea
     id("org.jetbrains.kotlin.jvm") version "1.3.40-eap-105"
     id("com.github.johnrengelman.shadow") version "4.0.2"
     id("ca.coglinc.javacc") version "2.4.0"
     id("com.github.breadmoirai.github-release") version "2.2.9"
+    id("com.jfrog.bintray") version "1.8.3" // Don't use 1.8.4, crash when publishing
 }
 
 val kotlinVer by extra { "1.3.41" }
@@ -113,7 +118,7 @@ tasks {
 }
 
 //
-// Release stuff. To create and upload the distribution to Github releases:
+// Github release. To create and upload the distribution to Github releases:
 // ./gradlew kashDist  // create the release zip file (build/distributions/kash-{version}.zip)
 // ./gradlew upload // upload the release to github
 //
@@ -153,7 +158,9 @@ distributions {
 
 tasks.register<Jar>("apiJar") {
     println("apiJar: $buildDir/classes/kotlin/main/com/beust/kash/api")
-    archiveClassifier.set("api")
+//    archiveClassifier.set("api4")
+    archiveVersion.set("1.14")
+    version = "1.14"
     from("$buildDir/classes/kotlin/main") {
         include("/com/beust/kash/api/*")
     }
@@ -189,5 +196,50 @@ tasks.register("kashDist") {
 tasks.register("upload") {
     dependsOn("kashDist")
     dependsOn("githubRelease")
+}
+
+//
+// Bintray release.
+//
+bintray {
+    user = project.findProperty("bintray.user")?.toString()
+    key = project.findProperty("bintray.apikey")?.toString()
+    dryRun = true
+
+    setPublications("apiLibrary")
+
+    with(pkg) {
+        repo = "maven"
+        name = "kash"
+        with(version) {
+//            name = "1.14"
+            desc = "Description of Kash"
+            with(gpg) {
+                sign = true
+            }
+        }
+    }
+}
+
+
+configure<PublishingExtension> {
+    publications {
+        create<MavenPublication>("apiLibrary") {
+            artifact(tasks["apiJar"])
+            pom {
+                name.set("kash-api")
+                description.set("The Kash public API")
+
+            }
+        }
+    }
+
+    repositories {
+        mavenLocal()
+        maven {
+            name = "myRepo"
+            url = uri("file://${buildDir}/repo")
+        }
+    }
 }
 
