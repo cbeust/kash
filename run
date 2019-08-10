@@ -1,1 +1,1 @@
-./gradlew shadowJar && java -jar build/libs/kash-1.13.jar
+./gradlew shadowJar && java -jar build/libs/kash-shell-1.14.jar

@@ -3,7 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val kashVersion = File("src/main/resources/version.txt").readText().trim()
 val kashJarBase = "kash-shell"
-val kashJar = "$kashJarBase-$kashVersion.jar"
+val kashShellJar = "$kashJarBase-$kashVersion.jar"
 
 allprojects {
     group = "com.beust.kash"
@@ -106,7 +106,7 @@ tasks.register("updateScripts") {
             "kash-debug" to "java -Droot-level=DEBUG")
         .forEach { pair ->
             File(pair.first).apply {
-                writeText(pair.second + " -jar build/libs/$kashJar\n")
+                writeText(pair.second + " -jar build/libs/$kashShellJar\n")
             }
         }
 }
@@ -150,7 +150,7 @@ distributions {
                 include("*")
             }
             from("$buildDir/libs") {
-                include("kash-$kashVersion.jar")
+                include("$kashShellJar")
             }
         }
     }
@@ -180,7 +180,7 @@ tasks.register("createScript") {
         File("$buildDir/kashScripts").apply {
             mkdirs()
             File(absolutePath, "kash").apply {
-                writeText("java -jar kash-shell-$kashVersion.jar $*\n")
+                writeText("java -jar $kashShellJar $*\n")
                 setExecutable(true)
             }
         }
