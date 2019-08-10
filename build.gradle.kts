@@ -187,9 +187,10 @@ tasks.register("createScript") {
     }
 }
 
-tasks.register("kashDist") {
+tasks.register("all") {
     dependsOn("assemble")
     dependsOn("smallDistZip")
+    dependsOn("apiJar")
     doLast {
         val file = "$buildDir/distributions/kash-$kashVersion.zip"
         File("$buildDir/distributions/kash-small-$kashVersion.zip")
