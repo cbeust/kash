@@ -11,9 +11,11 @@ import com.beust.kash.KashContext
 import com.beust.kash.LineRunner
 import org.jetbrains.kotlin.cli.common.repl.KOTLIN_SCRIPT_ENGINE_BINDINGS_KEY
 import org.jetbrains.kotlin.cli.common.repl.KOTLIN_SCRIPT_STATE_BINDINGS_KEY
+import org.jetbrains.kotlin.daemon.KotlinCompileDaemon.log
 import org.jetbrains.kotlin.mainKts.impl.FilesAndIvyResolver
 import org.jetbrains.kotlin.script.util.DependsOn
 import org.jetbrains.kotlin.script.util.Repository
+import org.slf4j.LoggerFactory
 import java.io.File
 import javax.script.Bindings
 import javax.script.ScriptEngine
@@ -33,6 +35,7 @@ import kotlin.script.templates.standard.ScriptTemplateWithBindings
     compilationConfiguration = CompilationConfiguration::class
 )
 abstract class ScriptDefinition(val jsr223Bindings: Bindings) : ScriptTemplateWithBindings(jsr223Bindings) {
+    private val log = LoggerFactory.getLogger(ScriptDefinition::class.java)
 
     private val myEngine: ScriptEngine? get() = bindings[KOTLIN_SCRIPT_ENGINE_BINDINGS_KEY]?.let { it as? ScriptEngine }
 
@@ -75,11 +78,16 @@ abstract class ScriptDefinition(val jsr223Bindings: Bindings) : ScriptTemplateWi
             val lr = lineRunner
             val savedState = jsr223Bindings.remove(KOTLIN_SCRIPT_STATE_BINDINGS_KEY)
             val context = KashContext(Engine(myEngine!!))
-            val result = lr!!.runLine(line, context, true)
-            savedState?.apply {
-                jsr223Bindings[KOTLIN_SCRIPT_STATE_BINDINGS_KEY] = savedState
+            try {
+                val result = lr!!.runLine(line, context, true)
+                savedState?.apply {
+                    jsr223Bindings[KOTLIN_SCRIPT_STATE_BINDINGS_KEY] = savedState
+                }
+                result
+            } catch(ex: Exception) {
+                log.error("EXCEPTION: $ex")
+                throw ex
             }
-            result
         }
     }
 }
