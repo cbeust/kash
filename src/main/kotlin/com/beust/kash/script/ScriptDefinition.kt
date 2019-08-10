@@ -11,7 +11,6 @@ import com.beust.kash.KashContext
 import com.beust.kash.LineRunner
 import org.jetbrains.kotlin.cli.common.repl.KOTLIN_SCRIPT_ENGINE_BINDINGS_KEY
 import org.jetbrains.kotlin.cli.common.repl.KOTLIN_SCRIPT_STATE_BINDINGS_KEY
-import org.jetbrains.kotlin.daemon.KotlinCompileDaemon.log
 import org.jetbrains.kotlin.mainKts.impl.FilesAndIvyResolver
 import org.jetbrains.kotlin.script.util.DependsOn
 import org.jetbrains.kotlin.script.util.Repository
@@ -85,7 +84,7 @@ abstract class ScriptDefinition(val jsr223Bindings: Bindings) : ScriptTemplateWi
                 }
                 result
             } catch(ex: Exception) {
-                log.error("EXCEPTION: $ex")
+                log.error("Exception evaluating \"$line\": $ex")
                 throw ex
             }
         }
