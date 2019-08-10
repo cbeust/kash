@@ -1,5 +1,6 @@
 package com.beust.kash
 
+import com.beust.kash.api.CommandResult
 import com.beust.kash.api.IKashContext
 import com.beust.kash.parser.SimpleList
 import com.google.inject.Inject

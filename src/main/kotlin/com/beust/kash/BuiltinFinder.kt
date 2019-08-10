@@ -1,6 +1,7 @@
 package com.beust.kash
 
 import com.beust.kash.api.Builtin
+import com.beust.kash.api.CommandResult
 import com.beust.kash.api.IKashContext
 import com.beust.kash.parser.SimpleList
 import kotlin.reflect.KCallable

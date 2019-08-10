@@ -5,7 +5,7 @@
 
 package com.beust.kash.script
 
-import com.beust.kash.CommandResult
+import com.beust.kash.api.CommandResult
 import com.beust.kash.Engine
 import com.beust.kash.KashContext
 import com.beust.kash.LineRunner
