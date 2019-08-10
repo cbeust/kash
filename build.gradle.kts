@@ -2,7 +2,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val kashVersion = File("src/main/resources/version.txt").readText().trim()
-val kashJarBase = "kash"
+val kashJarBase = "kash-shell"
 val kashJar = "$kashJarBase-$kashVersion.jar"
 
 allprojects {
@@ -106,7 +106,7 @@ tasks.register("updateScripts") {
             "kash-debug" to "java -Droot-level=DEBUG")
         .forEach { pair ->
             File(pair.first).apply {
-                writeText(pair.second + " -jar build/libs/$kashJar" + "\n")
+                writeText(pair.second + " -jar build/libs/$kashJar\n")
             }
         }
 }
@@ -157,16 +157,22 @@ distributions {
 }
 
 tasks.register<Jar>("apiJar") {
-    println("apiJar: $buildDir/classes/kotlin/main/com/beust/kash/api")
-//    archiveClassifier.set("api4")
-    archiveVersion.set("1.14")
-    version = "1.14"
+//    archiveClassifier.set("api")
+//    archiveVersion.set("1.14")
     from("$buildDir/classes/kotlin/main") {
         include("/com/beust/kash/api/*")
     }
 }
 
-tasks["assemble"].finalizedBy("apiJar")
+tasks.register<Jar>("apiSrcJar") {
+    archiveClassifier.set("sources")
+    archiveVersion.set("1.14")
+    from("src/main/kotlin") {
+        include("com/beust/kash/api/*")
+    }
+}
+
+tasks["assemble"].finalizedBy("apiJar", "apiSrcJar")
 tasks["smallDistZip"].dependsOn("createScript")
 
 tasks.register("createScript") {
@@ -174,7 +180,7 @@ tasks.register("createScript") {
         File("$buildDir/kashScripts").apply {
             mkdirs()
             File(absolutePath, "kash").apply {
-                writeText("java -jar kash-$kashVersion.jar $*\n")
+                writeText("java -jar kash-shell-$kashVersion.jar $*\n")
                 setExecutable(true)
             }
         }
@@ -204,7 +210,7 @@ tasks.register("upload") {
 bintray {
     user = project.findProperty("bintray.user")?.toString()
     key = project.findProperty("bintray.apikey")?.toString()
-    dryRun = true
+    dryRun = false
 
     setPublications("apiLibrary")
 
@@ -226,10 +232,10 @@ configure<PublishingExtension> {
     publications {
         create<MavenPublication>("apiLibrary") {
             artifact(tasks["apiJar"])
+            artifact(tasks["apiSrcJar"])
             pom {
                 name.set("kash-api")
                 description.set("The Kash public API")
-
             }
         }
     }
