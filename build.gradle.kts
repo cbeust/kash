@@ -157,8 +157,6 @@ distributions {
 }
 
 tasks.register<Jar>("apiJar") {
-//    archiveClassifier.set("api")
-//    archiveVersion.set("1.14")
     from("$buildDir/classes/kotlin/main") {
         include("/com/beust/kash/api/*")
     }
@@ -166,7 +164,6 @@ tasks.register<Jar>("apiJar") {
 
 tasks.register<Jar>("apiSrcJar") {
     archiveClassifier.set("sources")
-    archiveVersion.set("1.14")
     from("src/main/kotlin") {
         include("com/beust/kash/api/*")
     }
