@@ -53,7 +53,7 @@ class Shell @Inject constructor(
             extensions.addAll(dotKash.extensions)
         }
 
-        builtinFinder = BuiltinFinder(listOf(builtins), extensions)
+        builtinFinder = BuiltinFinder(listOf(builtins), extensions, dotKash?.classPath ?: emptyList())
 
         completers.addAll(listOf(
                 StringsCompleter(builtinFinder.builtinMap.keys),

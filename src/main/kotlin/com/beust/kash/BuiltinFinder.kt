@@ -4,12 +4,19 @@ import com.beust.kash.api.Builtin
 import com.beust.kash.api.CommandResult
 import com.beust.kash.api.IKashContext
 import com.beust.kash.parser.SimpleList
+import org.slf4j.LoggerFactory
+import java.io.File
+import java.net.URL
+import java.net.URLClassLoader
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 
 class LaunchableBuiltin(val instance: Any, val name: String, val lambda: KCallable<CommandResult>)
 
-class BuiltinFinder(instances: List<Any>, classNames: List<String>): ICommandFinder {
+class BuiltinFinder(instances: List<Any>, classNames: List<String>, private val classpath: List<String>)
+    : ICommandFinder
+{
+    private val log = LoggerFactory.getLogger(BuiltinFinder::class.java)
 
     /** Public so we can create a StringsCompleter from all the builtins */
     val builtinMap = findBuiltins(instances, classNames)
@@ -25,9 +32,17 @@ class BuiltinFinder(instances: List<Any>, classNames: List<String>): ICommandFin
         return result
     }
 
-    private fun instantiateClasses(classNames: List<String>) =
-        classNames.map {
-            val constructor = Class.forName(it).constructors.firstOrNull {
+    private fun instantiateClasses(classNames: List<String>): List<Any> {
+        val urls = classpath.map {
+            val f = File(it)
+            if (! f.exists()) {
+                System.err.println("Warning: Couldn't find $it, defined in ~/.kash.json")
+            }
+            URL("file:///$it".replace("\\", "/"))
+        }.toTypedArray()
+        val classLoader = URLClassLoader(urls)
+        val result = classNames.map {
+            val constructor = classLoader.loadClass(it).constructors.firstOrNull {
                 it.parameterCount == 0
             }
             if (constructor != null) {
@@ -36,6 +51,9 @@ class BuiltinFinder(instances: List<Any>, classNames: List<String>): ICommandFin
                 throw java.lang.IllegalArgumentException("Couldn't instantiate $it")
             }
         }
+        return result
+    }
+
     /**
      * Look up all the functions annotated with @Builtin on the given class.
      * @return a map where the keys are the name of the builtin and the value is a launchable
@@ -57,6 +75,7 @@ class BuiltinFinder(instances: List<Any>, classNames: List<String>): ICommandFin
                 }
                 .toList()
                 .toMap()
+        log.debug("Found the following built-ins on $cls: " + result.keys)
         return result
     }
 
