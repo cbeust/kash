@@ -1,5 +1,6 @@
 package com.beust.kash
 
+import com.beust.kash.api.CommandResult
 import com.beust.kash.api.IKashContext
 import com.google.inject.Inject
 import org.assertj.core.api.Assertions.assertThat
@@ -36,5 +37,11 @@ class ShellTest @Inject constructor(private val shell: Shell, private val contex
         runLine("""kenv("A","B")""")
         val result2 = runLine("echo \$A")
         assertThat(result2.out).isEqualTo("B\n")
+    }
+
+    @Test(enabled = false, description = "This causes an NPE, need to investigate")
+    fun os() {
+        val result = runLine("os(\"ls\")")
+        println(result)
     }
 }
