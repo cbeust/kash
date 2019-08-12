@@ -241,7 +241,23 @@ Here is a sample `~/.kash.json`:
 This file contains valid Kotlin code and will be run at start up, allowing you to define functions and variables
 that you need.
 
-## Writing scripts with Kash
+
+## Extending Kash
+
+Kash can be extended either dynamically with scripts (`.kash.kts` files) or compiled bytecode (which can be written in either Kotlin or any JVM language).
+
+There are currently two ways to extend Kash: built-ins and tab completers, which give you the following options:
+
+| | Dynamic | Static |
+|-|----|----|
+| Built-in | `.kash.kts` file | `@Builtin` |
+| Tab completer | `.kash.kts` file  | (in progress) |
+
+We'll review each of these cases in turn.
+
+
+
+### Writing scripts with Kash
 
 Kash script files are regular Kotlin Script files but with a few [additions](#kash-additions). We recommend using the suffix
 `.kash.kts` for your Kash files, which will provide additional support in IDEA for these files.
@@ -262,7 +278,7 @@ need to do now is just type `a` in Kash and this code will be executed:
 $ a
 Hello, Unknown
 ```
-Since this script file contains some code to parse the `args` parameter, you can actually pass it parameters:
+Since this script file contains some code to parse the `args` parameter, you can pass it parameters:
 
 ```
 $ a Cedric
@@ -286,16 +302,14 @@ Hello, Cedric
 $
 ```
 
-## Writing a Tab completer
+### Writing a Tab completer
 
-You can add your own Tab completers by writing simple Kash scripts. Tab completers are regular Kash scripts
-that receive the following parameters:
+You can add your own Tab completers by writing simple Kash scripts. Tab completers are regular Kash scripts that receive the following parameters:
 
-- `args[0]` (`String`): the entire line typed so far
-- `args[1]` (`Int`): the position of the cursor
+- `args[0]: String`: the entire line typed so far
+- `args[1]: Int`: the position of the cursor
 
-Your tab completer is expected to return a `List<String>` with the completion candidates, or an empty list
-if no completions are available.
+Your tab completer is expected to return a `List<String>` with the completion candidates, or an empty list if no completions are available.
 
 Here is a simple `git` completer as an example:
 
@@ -335,6 +349,44 @@ Once Kash is started with this configuration, you can test it as follows:
 $ git <TAB>
 commit status
 ```
+
+### Static extensions to Kash
+
+While scripts allow you to iterate quickly on your code (since you can edit them and rerun them right away), they do suffer from some performance penalty in the fact they need to be reinterpreted (note that this can vary since Kotlin can cache compiled scripts). Once you have written a script or an extension you are happy with, you should consider making it a static extension.
+
+A static extension is a compiled piece of code that is added to Kash's class path at start up. You gain performance with this approach but if you want to modify that extension, you will have to recompile it and relaunch Kash.
+
+At the time of this writing, only built-in functions can be written as static extensions, but tab completers will be available soon.
+
+### Built-in static extension
+
+In order to write a static built-in extension, you need to:
+
+- Declare a compile dependency on `com.beust.kash:kash:<version>`
+- Create a class and declare in it all your built-in as functions, annotated with `com.beust.kash.api.Builtin` with the following signature:
+
+```kotlin
+    @Builtin
+    fun hello(words: List<String>, context: IKashContext): CommandResult
+```
+
+- Declare this class to Kash in your `~/.kash.json` file:
+
+```json
+{
+    "classPaths": [
+        "~/kotlin/kash-example/build/libs/kash-example.jar"
+    ],
+    "extensions": [
+        "com.beust.kash.SimpleBuiltin"
+    ]
+}
+```
+
+- `classPaths`: where your extension classes can be found
+- `extensions`: all the classes that contain your static extensions
+
+Take a look at the [kash-example](https://github.com/cbeust/kash-example) project on Github for an example.
 
 ## Kash additions
 
