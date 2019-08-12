@@ -209,6 +209,7 @@ bintray {
     user = project.findProperty("bintray.user")?.toString()
     key = project.findProperty("bintray.apikey")?.toString()
     dryRun = false
+    publish = true
 
     setPublications("apiLibrary")
 
