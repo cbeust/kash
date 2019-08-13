@@ -8,7 +8,7 @@ package com.beust.kash.script
 import com.beust.kash.api.CommandResult
 import com.beust.kash.Engine
 import com.beust.kash.KashContext
-import com.beust.kash.LineRunner
+import com.beust.kash.api.ILineRunner
 import org.jetbrains.kotlin.cli.common.repl.KOTLIN_SCRIPT_ENGINE_BINDINGS_KEY
 import org.jetbrains.kotlin.cli.common.repl.KOTLIN_SCRIPT_STATE_BINDINGS_KEY
 import org.jetbrains.kotlin.mainKts.impl.FilesAndIvyResolver
@@ -70,7 +70,7 @@ abstract class ScriptDefinition(val jsr223Bindings: Bindings) : ScriptTemplateWi
     // Temporary hack that should be removed when 1.3.50 comes out
      val args: List<String> get() = bindings[Engine.ARGS] as List<String>
 
-    private val lineRunner: LineRunner? get() = bindings[Engine.LINE_RUNNER] as LineRunner?
+    private val lineRunner: ILineRunner? get() = bindings[Engine.LINE_RUNNER] as ILineRunner?
 
     fun os(line: String): CommandResult? {
         return withMyEngine {

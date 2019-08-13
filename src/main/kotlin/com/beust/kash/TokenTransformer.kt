@@ -1,6 +1,7 @@
 package com.beust.kash
 
 import com.beust.kash.api.IKashContext
+import com.beust.kash.api.ILineRunner
 import com.beust.kash.parser.SimpleCmd
 import com.beust.kash.parser.SimpleCommand
 import com.beust.kash.word.KashWordParser
@@ -65,7 +66,7 @@ class GlobTransformer(private val directoryStack: Stack<String>) : TokenTransfor
 /**
  * Replace lines surrounded by backticks with their evaluation by the shell.
  */
-class BackTickTransformer(private val lineRunner: LineRunner, private val context: IKashContext)
+class BackTickTransformer(private val lineRunner: ILineRunner, private val context: IKashContext)
     : TokenTransformer {
     override fun shouldTransform(command: SimpleCmd) = command.surroundedBy == "`"
 

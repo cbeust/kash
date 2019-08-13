@@ -2,6 +2,7 @@ package com.beust.kash
 
 import com.beust.kash.api.CommandResult
 import com.beust.kash.api.IKashContext
+import com.beust.kash.api.ILineRunner
 import com.beust.kash.parser.KashParser
 import com.beust.kash.parser.SimpleCommand
 import com.beust.kash.parser.SimpleList
@@ -28,7 +29,7 @@ class Shell @Inject constructor(
         private val kashObject: KashObject,
         private val builtins: Builtins,
         private val executableFinder: ExecutableFinder,
-        private val scriptFinder: ScriptFinder) : LineRunner {
+        private val scriptFinder: ScriptFinder) : ILineRunner {
 
     private val log = LoggerFactory.getLogger(Shell::class.java)
 

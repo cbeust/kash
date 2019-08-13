@@ -1,5 +1,6 @@
 package com.beust.kash
 
+import com.beust.kash.api.ILineRunner
 import com.google.inject.Inject
 import com.google.inject.Singleton
 import org.slf4j.LoggerFactory
@@ -18,7 +19,7 @@ import javax.script.ScriptEngine
 class Engine @Inject constructor(private val engine: ScriptEngine) {
     private val log = LoggerFactory.getLogger(Engine::class.java)
 
-    var lineRunner: LineRunner? = null
+    var lineRunner: ILineRunner? = null
 
     init {
         //
