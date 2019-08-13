@@ -41,7 +41,7 @@ class Shell @Inject constructor(
     private val commandFinder: CommandFinder
 
     init {
-        val context = KashContext(engine)
+        val context = KashContext(engine, this)
 
         val completers = arrayListOf<Completer>()
         val extensions = arrayListOf<String>()
@@ -75,7 +75,7 @@ class Shell @Inject constructor(
     }
 
     fun run() {
-        val context = KashContext(engine)
+        val context = KashContext(engine, this)
         var line = reader.readLine(prompt(context))
         while (line != null) {
             try {
@@ -189,8 +189,8 @@ class Shell @Inject constructor(
     private val tokenTransformers: List<TokenTransformer> = listOf(
             TildeTransformer(),
             GlobTransformer(directoryStack),
-            BackTickTransformer(this, KashContext(engine)),
-            EnvVariableTransformer(KashContext(engine).env)
+            BackTickTransformer(this, KashContext(engine, this)),
+            EnvVariableTransformer(KashContext(engine, this).env)
     )
 
     private fun tokenTransformer2(command: SimpleCommand) {

@@ -9,7 +9,7 @@ import com.google.inject.Inject
 import java.io.File
 import java.io.FileReader
 
-class Builtins @Inject constructor(private val context: KashContext,
+class Builtins @Inject constructor(
         private val kashObject: KashObject,
         private val engine: Engine,
         private val executableFinder: ExecutableFinder)

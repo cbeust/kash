@@ -5,9 +5,9 @@
 
 package com.beust.kash.script
 
-import com.beust.kash.api.CommandResult
 import com.beust.kash.Engine
 import com.beust.kash.KashContext
+import com.beust.kash.api.CommandResult
 import com.beust.kash.api.ILineRunner
 import org.jetbrains.kotlin.cli.common.repl.KOTLIN_SCRIPT_ENGINE_BINDINGS_KEY
 import org.jetbrains.kotlin.cli.common.repl.KOTLIN_SCRIPT_STATE_BINDINGS_KEY
@@ -74,11 +74,10 @@ abstract class ScriptDefinition(val jsr223Bindings: Bindings) : ScriptTemplateWi
 
     fun os(line: String): CommandResult? {
         return withMyEngine {
-            val lr = lineRunner
             val savedState = jsr223Bindings.remove(KOTLIN_SCRIPT_STATE_BINDINGS_KEY)
-            val context = KashContext(Engine(myEngine!!))
+            val context = KashContext(Engine(myEngine!!), lineRunner!!)
             try {
-                val result = lr!!.runLine(line, context, true)
+                val result = lineRunner!!.runLine(line, context, true)
                 savedState?.apply {
                     jsr223Bindings[KOTLIN_SCRIPT_STATE_BINDINGS_KEY] = savedState
                 }

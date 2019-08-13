@@ -1,11 +1,11 @@
 package com.beust.kash
 
 import com.beust.kash.api.IKashContext
-import com.google.inject.Inject
+import com.beust.kash.api.ILineRunner
 import java.io.File
 import java.util.*
 
-class KashContext @Inject constructor(engine: Engine): IKashContext {
+class KashContext constructor(engine: Engine, override val lineRunner: ILineRunner): IKashContext {
     private val kashObject = KashObject(engine)
 
     override val scriptPaths: List<String> get() = DotKashJsonReader.dotKash?.scriptPath ?: emptyList()

@@ -8,4 +8,5 @@ interface IKashContext {
     val paths: ArrayList<String>
     val scriptPaths: List<String>
     val prompt: String
+    val lineRunner: ILineRunner
 }
