@@ -119,7 +119,7 @@ tasks {
 
 //
 // Github release. To create and upload the distribution to Github releases:
-// ./gradlew kashDist  // create the release zip file (build/distributions/kash-{version}.zip)
+// ./gradlew all  // create the release zip file (build/distributions/kash-{version}.zip)
 // ./gradlew upload // upload the release to github
 //
 
@@ -198,7 +198,7 @@ tasks.register("all") {
 
 // Upload to github releases
 tasks.register("upload") {
-    dependsOn("kashDist")
+    dependsOn("all")
     dependsOn("githubRelease")
 }
 
