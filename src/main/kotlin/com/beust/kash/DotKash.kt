@@ -22,7 +22,7 @@ class DotKash(
     @Json(name = "classPaths") val _classPath: List<String> = listOf(),
     @Json(name = "scriptPaths") val _scriptPath: List<String> = listOf(),
     @Json(name = "completers") val _completers: List<String> = listOf(),
-    @Json(name = "extensions") val extensions: List<String>
+    @Json(name = "extensions") val extensions: List<String> = listOf()
 ) {
     val scriptPath: List<String> get() = _scriptPath.map { Tilde.expand(it) }
     val classPath: List<String> get() = _classPath.map { Tilde.expand(it) }
